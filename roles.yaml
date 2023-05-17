@@ -1,0 +1,53 @@
+title: "Iris3"
+description: "Roles needed by the Iris App Engine app"
+#TODO Generate most values directly from the Python class to avoid duplication
+# Below, where `update` rather than `setLabels`  is used, it is because there is no `setLabels`.
+# Note: Not clear that `setTags` is really needed.
+stage: "GA"
+includedPermissions:
+  - bigquery.datasets.get
+  - bigquery.datasets.update
+  - bigquery.tables.get
+  - bigquery.tables.list
+  - bigquery.tables.update
+  - bigquery.tables.delete
+  - cloudsql.instances.get
+  - cloudsql.instances.list
+  - cloudsql.instances.update
+  - compute.instances.get
+  - compute.instances.list
+  - compute.instances.setLabels
+  - compute.instances.setTags
+  - compute.projects.get
+  - compute.regions.get
+  - compute.regions.list
+  - compute.zones.get
+  - compute.zones.list
+  - compute.disks.list
+  - compute.disks.get
+  - compute.disks.setLabels
+  - compute.snapshots.list
+  - compute.snapshots.get
+  - compute.snapshots.setLabels
+  - pubsub.topics.get
+  - pubsub.topics.list
+  - pubsub.topics.update
+  - pubsub.topics.updateTag
+  - pubsub.subscriptions.get
+  - pubsub.subscriptions.list
+  - pubsub.subscriptions.update
+  - resourcemanager.folders.get
+  - resourcemanager.folders.list
+  - resourcemanager.organizations.get
+  - resourcemanager.projects.get
+  - resourcemanager.projects.list
+  - serviceusage.services.list
+  - storage.buckets.get
+  - storage.buckets.list
+  - storage.buckets.update
+  # CLOUD RUN
+  - run.services.get
+  - run.services.list
+  - run.services.update
+  - run.services.setIamPolicy
+  - run.services.getIamPolicy
