@@ -40,7 +40,7 @@ specific_prefixes: {}
 
 # If from_project is True, then for each resource we are labeling, copy the labels from its project onto it.
 # The default is False.
-from_project: False
+from_project: True
 
 # If label_all_on_cron is False (the default), then to save money,
 #  only resources of certain types get labeled on cron: those whose plugins either
@@ -66,4 +66,3 @@ test_or_dev_project_markers:
   - test
   - dev
   - qa
-
