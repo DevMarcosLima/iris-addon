@@ -1,13 +1,20 @@
+
+# See config.yaml.original in git; the others are dynamic and so not put in git.
+config-test.yaml
+config-dev.yaml
+config.yaml
+
+#
+__pycache__/
 *.bak
 .DS_Store
 TEMP*
-
-test_scripts/
-sample_data/
+.idea/
 
 # Environments
 .env
 .venv
 virtenv*/
-.idea/
-__pycache__/
+
+
+memray/
