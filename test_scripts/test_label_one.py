@@ -1,23 +1,27 @@
-import logging
 import os
 import sys
 
 from plugins.snapshots import Snapshots
-from test_scripts.utils_for_tests import label_one, assert_root_path
-from util.utils import init_logging
+from test_scripts.utils_for_tests import label_one
 
-init_logging()
 """
-This is a debugging tool used in development. It simulates the action that happens when the log sink generates
+
+This is a debugging tool  useful in development. It simulates the action that happens when the log sink generates
 a PubSub message, when a resource is created.
 
 
 To use this:
 1. Create resources that you want to test, for example a BigQuery Table table-1 in dataset-1.
 2. Run main.py in debug mode.
-3. Then run this file (in project root), test_label_one.py. Error messages will tell you what input it needs, but
-you can also see Usage below (or run test_label_one.py --help)) for details.
-  * The resource that you target must match the data in `sample_data`. For example, an instance must be in zone us-east1-b.
+3. Then run this file (in project root), test_label_one.py. Error messages will tell you what input it needs, but in summary:
+   
+  * Give it the environment variables
+    - `resource_type` selected from "buckets", "cloudsql", or any other of the 
+        resource types in the test_... functions below
+    - `project` where the resource is deployed
+    - `resource` for the name of the resource (in a BigQuery example, table-1)
+    -  and `parent` for the name of the parent if relevant (in the BigQuery example, dataset-1). 
+        The parent is needed only with BigQuery Tables and PubSub Subscriptions.
  
 """
 
@@ -35,17 +39,10 @@ def __resource_name():
         raise ValueError(
             "Must specify 'resource' key in environment for name of "
             "resource, e.g. the name of the VM Instance, Disk, Subscription, Topic, "
-            "Instance, BigQuery Table or Dataset, "
+            "BigTable Instance, BigQuery Table or Dataset, "
             "Cloud Storage Bucket, or CloudSQL Instance"
         )
     return resource
-
-
-def __zone(raise_exc=True):
-    zone = os.environ.get("zone")
-    if not zone and raise_exc:
-        raise ValueError("Must specify 'zone' key in environment")
-    return zone
 
 
 def __parent_name():
@@ -81,13 +78,7 @@ def test_table():
 
 
 def test_instances():
-    label_one(
-        __project(),
-        __resource_name(),
-        "compute.instances.insert",
-        parent_name="",
-        zone=__zone(),
-    )
+    label_one(__project(), __resource_name(), "compute.instances.insert")
 
 
 def test_snapshots():
@@ -101,8 +92,6 @@ def test_disks():
         __project(),
         __resource_name(),
         Disks().method_names()[0],
-        parent_name="",
-        zone=__zone(),
     )
 
 
@@ -123,19 +112,25 @@ def test_subscriptions():
     )
 
 
+def test_bigtable():
+    from plugins.bigtable import Bigtable
+
+    label_one(__project(), __resource_name(), Bigtable().method_names()[0])
+
+
 def main():
     dir_ = dir(sys.modules[__name__])
     test_ = "test_"
     test_func = [f for f in dir_ if f.startswith(test_)]
-    resource_types = [f[len(test_) :] for f in test_func]
+    resource_types = [f[len(test_):] for f in test_func]
     resource_types_s = ", ".join(sorted(resource_types))
     resource_type = os.environ.get("resource_type", "")
     func_name = test_ + resource_type
     if (
-        func_name not in dir_
-        or not resource_type
-        or len(sys.argv) > 1
-        and (sys.argv[1] == "-h" or sys.argv[1] == "--help")
+            func_name not in dir_
+            or not resource_type
+            or len(sys.argv) > 1
+            and (sys.argv[1] == "-h" or sys.argv[1] == "--help")
     ):
         print(
             f"""Usage: {os.path.basename(sys.argv[0])}  
@@ -149,7 +144,6 @@ def main():
         )
         exit(1)
 
-    logging.info("%s %s %s", __project(), __zone(raise_exc=False), __resource_name())
     f = getattr(
         sys.modules[__name__],
         func_name,
@@ -158,5 +152,4 @@ def main():
 
 
 if __name__ == "__main__":
-    assert_root_path()
     main()

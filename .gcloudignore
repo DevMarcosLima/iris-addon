@@ -1,21 +1,15 @@
+*.bak
+.DS_Store
 
 test_scripts/
-
 sample_data/
-memray/
+
+.env
+.venv
+virtenv*/
+.idea/
 README.md
 *.sh
 TEMP*
 *.template
-config-dev.yaml
-
-.github/
-.git/
-.idea/
-
-virtenv*/
-venv/
-
-*.bak
-.DS_Store
 
