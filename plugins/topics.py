@@ -1,100 +1,110 @@
 import logging
-from functools import lru_cache
-from typing import List, Dict, Optional
+import re
+import typing
 
+from google.cloud import pubsub_v1
 from googleapiclient import errors
 
 from plugin import Plugin
-from util.gcp_utils import (
-    cloudclient_pb_obj_to_dict,
-    cloudclient_pb_objects_to_list_of_dicts,
-    add_loaded_lib,
-)
 from util.utils import log_time, timing
 
 
 class Topics(Plugin):
+    __topic_client = pubsub_v1.PublisherClient()
+    __topic_path_regex = re.compile(r"^projects/[^/]+/topics/[^/]+$")
+
     @classmethod
-    @lru_cache(maxsize=1)
-    def _cloudclient(cls, _=None):
-        logging.info("_cloudclient for %s", cls.__name__)
-        # Local import to avoid burdening AppEngine memory.
-        # Loading all Cloud Client libraries would be 100MB  means that
-        # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
-        from google.cloud import pubsub_v1
+    def discovery_api(cls) -> typing.Tuple[str, str]:
+        return "pubsub", "v1"
 
-        add_loaded_lib("pubsub_v1")
+    def api_name(self):
+        return "pubsub.googleapis.com"
 
-        return pubsub_v1.PublisherClient()
-
-    @staticmethod
-    def _discovery_api():
-        """Discovery API not actually used with Topics. Would be "pubsub", "v1"""
-        return None
-
-    @staticmethod
-    def method_names():
-        # Actually"google.pubsub.v1.Subscriber.CreateTopic", but substring is allowed
+    def method_names(self):
+        # Actually longer name, but substring is allowed
         return ["Publisher.CreateTopic"]
 
     def label_all(self, project_id):
-        with timing(f"label_all({type(self).__name__})  in {project_id}"):
-            for o in self._list_all(project_id):
+        with timing(f"label_all(Topic)  in {project_id}"):
+            topics = self.__list_topics(project_id)
+            for topics in topics:
                 try:
-                    self.label_resource(o, project_id)
-                except Exception:
-                    logging.exception("")
+                    self.label_resource(topics, project_id)
+                except Exception as e:
+                    logging.exception(e)
 
-    def __get_resource(self, path):
+    def __get_topic(self, topic_path):
+
+        assert self.__topic_path_regex.match(topic_path)
         try:
-            o = self._cloudclient().get_topic(topic=path)
-            return cloudclient_pb_obj_to_dict(o)
-        except errors.HttpError:
-            logging.exception("")
+            result = (
+                self._google_client.projects().topics().get(topic=topic_path).execute()
+            )
+            return result
+        except errors.HttpError as e:
+            logging.exception(e)
             return None
 
-    def _list_all(self, project_id) -> List[Dict]:
-        all_resources = self._cloudclient().list_topics(
-            request={"project": f"projects/{project_id}"}
-        )
-        return cloudclient_pb_objects_to_list_of_dicts(all_resources)
+    def __list_topics(self, project_id):
+
+        topics = []
+        page_token = None
+        while True:
+            result = (
+                self._google_client.projects()
+                .topics()
+                .list(
+                    project=f"projects/{project_id}",
+                    pageToken=page_token
+                    # No filter param availble
+                )
+                .execute()
+            )
+            if "topics" in result:
+                topics += result["topics"]
+            if "nextPageToken" in result:
+                page_token = result["nextPageToken"]
+            else:
+                break
+
+        return topics
 
     @log_time
-    def label_resource(self, gcp_object: Dict, project_id):
+    def label_resource(self, gcp_object: typing.Dict, project_id):
         # This API does not accept label-fingerprint, so extracting just labels
         labels_outer = self._build_labels(gcp_object, project_id)
         if labels_outer is None:
             return
         labels = labels_outer["labels"]
 
-        name = self._gcp_name(gcp_object)
-        path = self._cloudclient().topic_path(project_id, name)
-        # Local import to avoid burdening AppEngine memory.
-        # Loading all Cloud Client libraries would be 100MB  means that
-        # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
-        from google.cloud import pubsub_v1
-
-        add_loaded_lib("pubsub_v1")
-        update_obj = pubsub_v1.types.Topic(name=path, labels=labels)
+        topic_name = self._gcp_name(gcp_object)
+        topic_path = self.__topic_client.topic_path(project_id, topic_name)
+        # We use the Google Cloud Library instead of the Google Client API used
+        # elsewhere because the latter does not seem to support changing the label,
+        # or at least I could not figure it out.
+        topic_object_holding_update = pubsub_v1.types.Topic(
+            name=topic_path, labels=labels
+        )
 
         update_mask = {"paths": {"labels"}}
 
-        with timing("update " + type(self).__name__):
-            _ = self._cloudclient().update_topic(
+        with timing("update topic"):
+            _ = self.__topic_client.update_topic(
                 request={
-                    "topic": update_obj,
+                    "topic": topic_object_holding_update,
                     "update_mask": update_mask,
                 }
             )
 
-        logging.info(f"Updated: {path}")
+        logging.info(f"Topic updated: {topic_path}")
 
-    def get_gcp_object(self, log_data: Dict) -> Optional[Dict]:
+    def get_gcp_object(self, log_data):
         try:
-            path = log_data["protoPayload"]["request"]["name"]
-            return self.__get_resource(path)
-        except Exception:
-            logging.exception("")
+            topic_path = log_data["protoPayload"]["request"]["name"]
+            topic = self.__get_topic(topic_path)
+            return topic
+        except Exception as e:
+            logging.exception(e)
             return None
 
     def _gcp_name(self, gcp_object):

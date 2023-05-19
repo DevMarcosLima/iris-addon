@@ -1,63 +1,59 @@
 import logging
-from functools import lru_cache
 
 from googleapiclient import errors
 
 from gce_base.gce_base import GceBase
 from util import gcp_utils
-from util.gcp_utils import add_loaded_lib
 from util.utils import log_time, timing
 
 
 class Snapshots(GceBase):
-    @classmethod
-    @lru_cache(maxsize=1)
-    def _cloudclient(cls, _=None):
+    def method_names(self):
+        return ["compute.disks.createSnapshot"]
 
-        logging.info("_cloudclient for %s", cls.__name__)
-        # Local import to avoid burdening AppEngine memory. Loading all
-        # Client libraries would be 100MB  means that the default AppEngine
-        # Instance crashes on out-of-memory even before actually serving a request.
-        from google.cloud import compute_v1
+    def __list_snapshots(self, project_id):
+        snapshots = []
+        page_token = None
+        more_results = True
 
-        add_loaded_lib("compute_v1")
-        return compute_v1.SnapshotsClient()
+        while more_results:
+            result = (
+                self._google_client.snapshots()
+                .list(
+                    project=project_id,
+                    pageToken=page_token,
+                )
+                .execute()
+            )
+            if "items" in result:
+                snapshots = snapshots + result["items"]
+            if "nextPageToken" in result:
+                page_token = result["nextPageToken"]
+            else:
+                more_results = False
 
-    @staticmethod
-    def method_names():
-        return ["compute.disks.createSnapshot", "compute.snapshots.insert"]
+        return snapshots
 
-    def _list_all(self, project_id):
-        # Local import to avoid burdening AppEngine memory. Loading all
-        # Client libraries would be 100MB  means that the default AppEngine
-        # Instance crashes on out-of-memory even before actually serving a request.
-        from google.cloud import compute_v1
-
-        add_loaded_lib("compute_v1")
-        all_resources = compute_v1.ListSnapshotsRequest(project=project_id)
-        return self._list_resources_as_dicts(all_resources)
-
-    def _get_resource(self, project_id, name):
+    def __get_snapshot(self, project_id, name):
         try:
-            # Local import to avoid burdening AppEngine memory.
-            # Loading all Cloud Client libraries would be 100MB  means that
-            # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
-            from google.cloud import compute_v1
-
-            add_loaded_lib("compute_v1")
-            request = compute_v1.GetSnapshotRequest(project=project_id, snapshot=name)
-            return self._get_resource_as_dict(request)
-        except errors.HttpError:
-            logging.exception("")
+            result = (
+                self._google_client.snapshots()
+                .get(project=project_id, snapshot=name)
+                .execute()
+            )
+            return result
+        except errors.HttpError as e:
+            logging.exception(e)
             return None
 
     def label_all(self, project_id):
-        with timing(f"label_all in {project_id}"):
-            for o in self._list_all(project_id):
+        with timing(f"label_all(Snapshot) in {project_id}"):
+            snapshots = self.__list_snapshots(project_id)
+            for snapshot in snapshots:
                 try:
-                    self.label_resource(o, project_id)
-                except Exception:
-                    logging.exception("")
+                    self.label_resource(snapshot, project_id)
+                except Exception as e:
+                    logging.exception(e)
             if self.counter > 0:
                 self.do_batch()
 
@@ -66,22 +62,23 @@ class Snapshots(GceBase):
             if "response" not in log_data["protoPayload"]:
                 return None
             request = log_data["protoPayload"]["request"]
-            name = request["name"]
-            project_id = log_data["resource"]["labels"]["project_id"]
-
-            return self._get_resource(project_id, name)
-        except Exception:
-            logging.exception("")
+            snap_name = request["name"]
+            snapshot = self.__get_snapshot(
+                log_data["resource"]["labels"]["project_id"], snap_name
+            )
+            return snapshot
+        except Exception as e:
+            logging.exception(e)
             return None
 
     @log_time
     def label_resource(self, gcp_object, project_id):
         labels = self._build_labels(gcp_object, project_id)
 
-        self._batch.add(  # Using Google Client API because CloudClient has, I think, no batch functionality
-            self._google_api_client()
-            .snapshots()
-            .setLabels(project=project_id, resource=gcp_object["name"], body=labels),
+        self._batch.add(
+            self._google_client.snapshots().setLabels(
+                project=project_id, resource=gcp_object["name"], body=labels
+            ),
             request_id=gcp_utils.generate_uuid(),
         )
         self.counter += 1

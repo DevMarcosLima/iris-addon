@@ -1,14 +1,12 @@
 import logging
-import threading
 import typing
-from functools import lru_cache
 
 from googleapiclient import errors
 
 from gce_base.gce_zonal_base import GceZonalBase
 from util import gcp_utils
-from util.gcp_utils import add_loaded_lib
 from util.utils import log_time
+from util.utils import timing
 
 
 class Disks(GceZonalBase):
@@ -17,89 +15,102 @@ class Disks(GceZonalBase):
     Independently created disks get labeled on creation.
     """
 
-    __lock = threading.Lock()
-
-    @staticmethod
-    @lru_cache(maxsize=1)
-    def _create_cloudclient():
-        logging.info("_cloudclient for %s", "Disks")
-        # Local import to avoid burdening AppEngine memory.
-        # Loading all Cloud Client libraries would be 100MB  means that
-        # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
-        from google.cloud import compute_v1
-
-        add_loaded_lib("compute_v1")
-        return compute_v1.DisksClient()
-
-    @classmethod
-    def _cloudclient(cls, _=None):
-        with cls.__lock:
-            return cls._create_cloudclient()
-
-    @staticmethod
-    def method_names():
-        # As of 2021-10-12,   beta.compute.disks.insert
+    def method_names(self):
+        # As of 2021-1§0-12, the GUI has beta.compute.disks.insert
+        # and CLI has beta.compute.disks.insert
         return ["compute.disks.insert"]
 
-    @staticmethod
-    def relabel_on_cron() -> bool:
+    @classmethod
+    def relabel_on_cron(cls) -> bool:
         """
-        We need to relabel on cron  because:
-        1. Though unattached disks are  labeled on creation,  attached disks are   not.
-        2. A disk that changes attachment status does not get relabeled on-event
+        Unattached disks are in fact labeled on creation.
+        But an attached disk is not.
+        Also, a disk that changes attachment status does not get relabeled on-event
         """
         return True
 
-    def _list_all(self, project_id, zone) -> typing.List[typing.Dict]:
-        # Local import to avoid burdening AppEngine memory.
-        # Loading all Cloud Client libraries would be 100MB  means that
-        # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
-        from google.cloud import compute_v1
-
-        add_loaded_lib("compute_v1")
-        request = compute_v1.ListDisksRequest(project=project_id, zone=zone)
-        return self._list_resources_as_dicts(request)
-
-    def _get_resource(self, project_id, zone, name):
-        try:
-            # Local import to avoid burdening AppEngine memory.
-            # Loading all Cloud Client libraries would be 100MB  means that
-            # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
-            from google.cloud import compute_v1
-
-            add_loaded_lib("compute_v1")
-            request = compute_v1.GetDiskRequest(
-                project=project_id, zone=zone, disk=name
+    def __list_disks(self, project_id, zone) -> typing.List[typing.Dict]:
+        disks = []
+        page_token = None
+        more_results = True
+        while more_results:
+            result = (
+                self._google_client.disks()
+                .list(
+                    project=project_id,
+                    zone=zone,
+                    pageToken=page_token,
+                )
+                .execute()
             )
+            if "items" in result:
+                disks = disks + result["items"]
+            if "nextPageToken" in result:
+                page_token = result["nextPageToken"]
+            else:
+                more_results = False
 
-            return self._get_resource_as_dict(request)
-        except errors.HttpError:
-            logging.exception("")
+        return disks
+
+    def __get_disk(self, project_id, zone, name):
+        try:
+            result = (
+                self._google_client.disks()
+                .get(project=project_id, zone=zone, disk=name)
+                .execute()
+            )
+            return result
+        except errors.HttpError as e:
+            logging.exception(e)
+            return None
+
+    def label_all(self, project_id):
+        with timing(f"label_all(Disk) in {project_id}"):
+            zones = self._all_zones(project_id)
+            for zone in zones:
+                disks = self.__list_disks(project_id, zone)
+                for disk in disks:
+                    try:
+                        self.label_resource(disk, project_id)
+                    except Exception as e:
+                        logging.exception(e)
+
+            if self.counter > 0:
+                self.do_batch()
+
+    def get_gcp_object(self, log_data):
+        try:
+            disk_name = log_data["protoPayload"]["resourceName"]
+            ind = disk_name.rfind("/")
+            disk_name = disk_name[ind + 1 :]
+            labels = log_data["resource"]["labels"]
+            disk = self.__get_disk(labels["project_id"], labels["zone"], disk_name)
+            return disk
+        except Exception as e:
+            logging.exception(e)
             return None
 
     @log_time
     def label_resource(self, gcp_object, project_id):
-        with self._write_lock:
-            labels = self._build_labels(gcp_object, project_id)
-            if labels is None:
-                return
 
-            zone = self._gcp_zone(gcp_object)
+        labels = self._build_labels(gcp_object, project_id)
+        if labels is None:
+            return
 
-            self._batch.add(
-                self._google_api_client()
-                .disks()
-                .setLabels(
-                    project=project_id,
-                    zone=zone,
-                    resource=gcp_object["name"],
-                    body=labels,
-                ),
-                request_id=gcp_utils.generate_uuid(),
-            )
-            self.counter += 1
-            if self.counter >= self._BATCH_SIZE:
-                self.do_batch()
+        zone = self._gcp_zone(gcp_object)
+
+        self._batch.add(
+            self._google_client.disks().setLabels(
+                project=project_id,
+                zone=zone,
+                resource=gcp_object["name"],
+                body=labels,
+            ),
+            request_id=gcp_utils.generate_uuid(),
+        )
+        self.counter += 1
+        if self.counter >= self._BATCH_SIZE:
+            self.do_batch()
 
     def _gcp_pd_attached(self, gcp_object):
         """Method dynamically called in generating labels, so don't change name"""
