@@ -44,6 +44,8 @@ class Cloudrun(Plugin):
         try:
             result = (
                 self._google_api_client()
+                .projects()
+                .locations()
                 .services()
                 .get(name=name)
                 .execute()
@@ -68,25 +70,30 @@ class Cloudrun(Plugin):
     def label_all(self, project_id):
         with timing(f"label_all({type(self).__name__}) in {project_id}"):
             page_token = None
-            while True:
-                response = (
-                    self._google_api_client()
-                    .services()
-                    .list(filter=f"projectId:{project_id}", pageToken=page_token)
-                    .execute()
-                )
+            try:
+                while True:
+                    response = (
+                        self._google_api_client()
+                        .projects()
+                        .locations()
+                        .services()
+                        .list(parent=f"projects/{project_id}/locations/-", pageToken=page_token)
+                        .execute()
+                    )
 
-                if "items" not in response:
-                    return
-                for service in response["items"]:
-                    try:
-                        self.label_resource(service, project_id)
-                    except Exception:
-                        logging.exception("")
-                if "nextPageToken" in response:
-                    page_token = response["nextPageToken"]
-                else:
-                    return
+                    if "items" not in response:
+                        return
+                    for service in response["items"]:
+                        try:
+                            self.label_resource(service, project_id)
+                        except Exception:
+                            logging.exception("")
+                    if "nextPageToken" in response:
+                        page_token = response["nextPageToken"]
+                    else:
+                        return
+            except Exception:
+                logging.exception("")
 
     @log_time
     def label_resource(self, gcp_object, project_id):
@@ -97,12 +104,12 @@ class Cloudrun(Plugin):
             service_name = gcp_object["metadata"]["name"]
             service_body = {"metadata": {"labels": labels["labels"]}}
 
-            self._google_api_client().services().patch(
-                name=f"{service_name}",
+            self._google_api_client().projects().locations().services().patch(
+                name=f"projects/{project_id}/locations/-/services/{service_name}",
                 body=service_body,
             ).execute()
 
         except errors.HttpError as e:
             if "SERVICE_STATUS_UNSPECIFIED" in gcp_object.get("status", {}):
-                logging.exception("Cloud Run service is not fully deployed yet, which is why we do not label it on-demand in the usual way",)
-        raise e
+                logging.exception("Cloud Run service is not fully deployed yet, which is why we do not label it on-demand in the usual way")
+            raise e
