@@ -7,7 +7,7 @@ from plugin import Plugin
 from util.utils import log_time, timing
 
 
-class CloudRun(Plugin):
+class Cloudrun(Plugin):
     @staticmethod
     def _discovery_api():
         return "run", "v1"

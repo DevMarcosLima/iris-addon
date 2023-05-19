@@ -48,4 +48,4 @@ includedPermissions:
   # CLOUD RUN
   - run.services.get
   - run.services.list
-  - storage.buckets.update
+  - run.services.update

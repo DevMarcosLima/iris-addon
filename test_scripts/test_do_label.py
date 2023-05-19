@@ -24,7 +24,7 @@ PLUGINS = [
     "Snapshots",
     "Subscriptions",
     "Topics",
-    "CloudRun",	
+    "Cloudrun",	
 ]
 
 
