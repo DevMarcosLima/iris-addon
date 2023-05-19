@@ -44,9 +44,8 @@ class Cloudrun(Plugin):
         try:
             result = (
                 self._google_api_client()
-                .namespaces()
                 .services()
-                .get(name=name, namespace="default")
+                .get(name=name)
                 .execute()
             )
             return result
@@ -73,7 +72,7 @@ class Cloudrun(Plugin):
                 response = (
                     self._google_api_client()
                     .services()
-                    .list(namespace="default", filter=f"projectId:{project_id}", pageToken=page_token)
+                    .list(filter=f"projectId:{project_id}", pageToken=page_token)
                     .execute()
                 )
 
@@ -96,12 +95,10 @@ class Cloudrun(Plugin):
             return
         try:
             service_name = gcp_object["metadata"]["name"]
-            service_namespace = gcp_object["metadata"]["namespace"]
             service_body = {"metadata": {"labels": labels["labels"]}}
 
-            self._google_api_client().namespaces().services().patch(
+            self._google_api_client().services().patch(
                 name=f"{service_name}",
-                namespace=service_namespace,
                 body=service_body,
             ).execute()
 
