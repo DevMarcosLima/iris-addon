@@ -72,7 +72,6 @@ class Cloudrun(Plugin):
             while True:
                 response = (
                     self._google_api_client()
-                    .namespaces()
                     .services()
                     .list(namespace="default", filter=f"projectId:{project_id}", pageToken=page_token)
                     .execute()
