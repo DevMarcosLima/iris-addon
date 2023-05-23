@@ -77,7 +77,7 @@ class Cloudrun(Plugin):
                         .projects()
                         .locations()
                         .services()
-                        .list(parent=f"projects/{project_id}/locations/-", pageToken=page_token)
+                        .list(parent=f"projects/poc-iris3-exyon/locations/us-central1/services/hello", pageToken=page_token)
                         .execute()
                     )
 
