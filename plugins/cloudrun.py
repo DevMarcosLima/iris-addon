@@ -105,7 +105,7 @@ class Cloudrun(Plugin):
             service_body = {"metadata": {"labels": labels["labels"]}}
 
             self._google_api_client().projects().locations().services().patch(
-                name=f"projects/{project_id}/locations/-/services/{service_name}",
+                name=f"projects/poc-iris3-exyon/locations/us-central1/services/{service_name}",
                 body=service_body,
             ).execute()
 
