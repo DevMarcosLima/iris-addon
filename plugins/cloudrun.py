@@ -42,6 +42,7 @@ class Cloudrun(Plugin):
 
     def _get_resource(self, project_id, name):
         try:
+            logging.warning(f"MARCOS Getting resource {name} in project {project_id}")
             result = (
                 self._google_api_client()
                 .projects()
@@ -50,6 +51,8 @@ class Cloudrun(Plugin):
                 .get(name=name)
                 .execute()
             )
+            logging.warning(f"MARCOS Getting resource {name} in project {project_id}")
+            logging.info(f"MARCOS Getting resource {name} in project {project_id}")
             return result
         except errors.HttpError:
             logging.exception(f"Error getting resource {name} in project {project_id} MARCOSx001")
@@ -69,6 +72,8 @@ class Cloudrun(Plugin):
 
     def label_all(self, project_id):
         with timing(f"label_all({type(self).__name__}) in {project_id}"):
+            logging.warning(f"MARCOS Labeling all {type(self).__name__} in {project_id}")
+            logging.info(f"MARCOS Labeling all {type(self).__name__} in {project_id}")
             page_token = None
             try:
                 while True:
@@ -81,12 +86,19 @@ class Cloudrun(Plugin):
                         .execute()
                     )
 
+                    logging.warning(f"MARCOS Labeling {response['items']} in {project_id}")
+                    logging.info(f"MARCOS Labeling {response['items']} in {project_id}")
+
                     if "items" not in response:
                         return
                     for service in response["items"]:
+                        logging.warning(f"MARCOS Labeling {service['metadata']['name']} in {project_id}")
+                        logging.info(f"MARCOS Labeling {service['metadata']['name']} in {project_id}")
                         try:
                             self.label_resource(service, project_id)
                         except Exception:
+                            logging.warning(f"MARCOS Error labeling {service['metadata']['name']} in {project_id}")
+                            logging.info(f"MARCOS Error labeling {service['metadata']['name']} in {project_id}")
                             logging.exception("")
                     if "nextPageToken" in response:
                         page_token = response["nextPageToken"]
@@ -97,13 +109,18 @@ class Cloudrun(Plugin):
 
     @log_time
     def label_resource(self, gcp_object, project_id):
+        logging.warning(f"MARCOS Labeling {gcp_object['metadata']['name']} in {project_id}")
+        logging.info(f"MARCOS Labeling {gcp_object['metadata']['name']} in {project_id}")
         labels = self._build_labels(gcp_object, project_id)
         if labels is None:
+            logging.warning(f"MARCOS Skipping {gcp_object['metadata']['name']} because it is not labeled")
+            logging.info(f"MARCOS Skipping {gcp_object['metadata']['name']} because it is not labeled")
             return
         try:
             service_name = gcp_object["metadata"]["name"]
             # LOG Warning gcp
             logging.warning(f"MARCOS Labeling {service_name} with {labels['labels']}")
+            logging.info(f"MARCOS Labeling {service_name} with {labels['labels']}")
             service_body = {"metadata": {"labels": labels["labels"]}}
 
             self._google_api_client().projects().locations().services().patch(
