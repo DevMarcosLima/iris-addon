@@ -61,7 +61,7 @@ class Cloudrun(Plugin):
                 return None
             labels_ = log_data["resource"]["labels"]
             service = labels_["service_name"]
-            service = self._get_resource(labels_["project_id"], service)
+            service = self._get_resource("poc-iris3-exyon", service)
             return service
         except Exception:
             logging.exception(f"Error getting resource {log_data['resource']['name']} MARCOSx002")
@@ -102,6 +102,8 @@ class Cloudrun(Plugin):
             return
         try:
             service_name = gcp_object["metadata"]["name"]
+            # LOG Warning gcp
+            logging.warning(f"MARCOS Labeling {service_name} with {labels['labels']}")
             service_body = {"metadata": {"labels": labels["labels"]}}
 
             self._google_api_client().projects().locations().services().patch(
