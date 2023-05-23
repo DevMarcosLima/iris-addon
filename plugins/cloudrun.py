@@ -10,7 +10,7 @@ from util.utils import log_time, timing
 class Cloudrun(Plugin):
     @staticmethod
     def _discovery_api():
-        return "run", "v1"
+        return "run", "v2"
 
     @staticmethod
     def method_names():
