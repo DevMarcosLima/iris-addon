@@ -162,15 +162,15 @@ class Cloudrun(Plugin):
             is_create = gcp_object["createTime"]
             is_create = is_create.split("T")[0]
             is_location = service_name.split("/")[3]
-            
+
             # IF DONT HAVE LABELS
             if not service_body.get("labels"):
                 service_body["labels"] = {}
             prefix = "exyon_"
             # ADD LABELS
-            service_body["labels"][f'{prefix}exyon_name'] = is_name
-            service_body["labels"][f'{prefix}exyon_create'] = is_create
-            service_body["labels"][f'{prefix}exyon_location'] = is_location
+            service_body["labels"][f'{prefix}name'] = is_name
+            service_body["labels"][f'{prefix}create'] = is_create
+            service_body["labels"][f'{prefix}location'] = is_location
 
             self._google_api_client().projects().locations().services().patch(
                 name=f"projects/poc-iris3-exyon/locations/us-central1/services/{is_name}",
