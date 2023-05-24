@@ -25,6 +25,7 @@ PLUGINS = [
     "Subscriptions",
     "Topics",
     "Cloudrun",	
+    "Appengine",
 ]
 
 
