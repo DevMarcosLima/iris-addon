@@ -171,7 +171,7 @@ class Cloudrun(Plugin):
             service_body["labels"]['exyon_location'] = is_location
 
             self._google_api_client().projects().locations().services().patch(
-                name=f"projects/poc-iris3-exyon/locations/us-central1/services/{is_label_name}",
+                name=f"projects/poc-iris3-exyon/locations/us-central1/services/{is_name}",
                 body=service_body,
             ).execute()
 
