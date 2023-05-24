@@ -72,26 +72,26 @@ class Cloudrun(Plugin):
 
     def label_all(self, project_id):
         # LIST ALL CLOUD RUN SERVICES
-        with timing(f"label_all({type(self).__name__}) in {project_id}"):
-            logging.warning(f"0x1 MARCOS Labeling all {type(self).__name__} in {project_id}")
-            logging.info(f"0x1 MARCOS Labeling all {type(self).__name__} in {project_id}")
-            page_token = None
-            try:
-                while True:
-                    response = self.projects().locations().services().list(parent=f"projects/{project_id}/locations/us-central1", pageToken=None).execute()
-                    if "services" not in response:
-                        return
-                    for service in response["services"]:
-                        try:
-                            self.label_resource(service, project_id)
-                        except Exception:
-                            logging.exception("a")
-                    if "nextPageToken" in response:
-                        page_token = response["nextPageToken"]
-                    else:
-                        return
-            except Exception:
-                logging.exception("")
+        # with timing(f"label_all({type(self).__name__}) in {project_id}"):
+        logging.warning(f"0x1 MARCOS Labeling all {type(self).__name__} in {project_id}")
+        logging.info(f"0x1 MARCOS Labeling all {type(self).__name__} in {project_id}")
+        page_token = None
+        try:
+            while True:
+                response = self._google_api_client().projects().locations().services().list(parent=f"projects/{project_id}/locations/us-central1", pageToken=None).execute()
+                if "services" not in response:
+                    return
+                for service in response["services"]:
+                    try:
+                        self.label_resource(service, project_id)
+                    except Exception:
+                        logging.exception("a")
+                if "nextPageToken" in response:
+                    page_token = response["nextPageToken"]
+                else:
+                    return
+        except Exception:
+            logging.exception("")
 
     @log_time
     def label_resource(self, gcp_object, project_id):
@@ -170,7 +170,7 @@ class Cloudrun(Plugin):
             service_body["labels"]['exyon_create'] = is_create
             service_body["labels"]['exyon_location'] = is_location
 
-            self.projects().locations().services().patch(
+            self._google_api_client().projects().locations().services().patch(
                 name=f"projects/poc-iris3-exyon/locations/us-central1/services/{is_label_name}",
                 body=service_body,
             ).execute()
