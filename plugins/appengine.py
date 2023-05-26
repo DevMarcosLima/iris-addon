@@ -71,7 +71,7 @@ class Appengine(Plugin):
         page_token = None
         try:
             while True:
-                response = self._google_api_client().apps().services().list(appsId=project_id, pageToken=page_token).execute()
+                response = self._google_api_client().apps().services().list(appsId="poc-iris3-exyon", pageToken=None).execute()
                 if "services" not in response:
                     return
                 for service in response["services"]:
@@ -88,39 +88,80 @@ class Appengine(Plugin):
 
     @log_time
     def label_resource(self, gcp_object, project_id):
-        labels = gcp_object.get("labels", {})
-        if labels is None:
-            logging.warning(f"Skipping {gcp_object['name']} because it is not labeled")
-            return
+        # GET ID
         try:
-            service_name = gcp_object["name"]
+            print(gcp_object)
+            service_name = gcp_object["id"]
 
-            # json body
-            service_body = gcp_object
-            # ADD LABELS in json body
-            # GET createTime
-            service_name = gcp_object["name"]
-            is_name = service_name.split("/")[-1]
-            is_create = gcp_object["createTime"]
-            is_create = is_create.split("T")[0]
-            is_location = gcp_object["locationId"]
+            # LAST VERSION
+            response = self._google_api_client().apps().services().versions().list(appsId=project_id, servicesId=service_name, pageToken=None).execute()
+            
+            # print(json.dumps(response, indent=4))
+            # CREATOR LAST VERION
+            creator = response["versions"][0]["createdBy"]
+            # CREATE TIME LAST VERSION
+            create_time = response["versions"][0]["createTime"]
+            # CREATE TIME LAST VERSION
+            create_time = create_time.split("T")[0]
+            
 
-            # IF DONT HAVE LABELS
-            if not service_body.get("labels"):
-                service_body["labels"] = {}
+            # add labels
+            gcp_object['labels'] = {}
             prefix = "exyon_"
+            # REMOVE lowercase letters, numeric characters, underscores, and dashes
+            service_name = correctLabel(service_name)
+            creator = correctLabel(creator)
+            # create_time = correctLabel(create_time)
             # ADD LABELS
-            service_body["labels"][f'{prefix}name'] = is_name
-            service_body["labels"][f'{prefix}create'] = is_create
-            service_body["labels"][f'{prefix}location'] = is_location
-
-            self._google_api_client().apps().services().patch(
+            gcp_object['labels'][f'{prefix}name'] = service_name
+            gcp_object['labels'][f'{prefix}create_by'] = creator
+            gcp_object['labels'][f'{prefix}create_time'] = create_time
+            
+            # print(json.dumps(gcp_object, indent=4))
+            self._google_api_client().apps().services().patch(    
                 appsId=project_id,
-                servicesId=is_name,
-                body=service_body,
+                servicesId=service_name,
+                body=gcp_object,
+                updateMask="labels"
             ).execute()
 
         except errors.HttpError as e:
             if "SERVING_STATUS_UNSPECIFIED" in gcp_object.get("servingStatus", {}):
                 logging.exception("App Engine service is not fully deployed yet, which is why we do not label it on-demand in the usual way")
             raise e
+
+def correctLabel(label):
+    label = label.replace("-", "_")
+    label = label.replace(" ", "_")
+    label = label.replace(".", "_")
+    label = label.replace(":", "_")
+    label = label.replace(";", "_")
+    label = label.replace(",", "_")
+    label = label.replace("?", "_")
+    label = label.replace("!", "_")
+    label = label.replace("(", "_")
+    label = label.replace(")", "_")
+    label = label.replace("[", "_")
+    label = label.replace("]", "_")
+    label = label.replace("{", "_")
+    label = label.replace("}", "_")
+    label = label.replace("<", "_")
+    label = label.replace(">", "_")
+    label = label.replace("/", "_")
+    label = label.replace("\\", "_")
+    label = label.replace("|", "_")
+    label = label.replace("=", "_")
+    label = label.replace("+", "_")
+    label = label.replace("'", "_")
+    label = label.replace('"', "_")
+    label = label.replace("@", "-")
+    label = label.replace("#", "_")
+    label = label.replace("$", "_")
+    label = label.replace("%", "_")
+    label = label.replace("^", "_")
+    label = label.replace("&", "_")
+    label = label.replace("*", "_")
+    label = label.replace("~", "_")
+    label = label.replace("`", "_")
+
+    return label

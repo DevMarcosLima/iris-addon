@@ -112,6 +112,9 @@ class Cloudrun(Plugin):
             is_create = is_create.split("T")[0]
             is_location = service_name.split("/")[3]
 
+            # ADICIONAR CRIADOR ENTRE OUTROS LABELS
+            
+
             # IF DONT HAVE LABELS
             if not service_body.get("labels"):
                 service_body["labels"] = {}
