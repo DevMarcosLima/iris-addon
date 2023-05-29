@@ -83,6 +83,21 @@ class Instances(GceZonalBase):
 
             zone = self._gcp_zone(gcp_object)
 
+            # CREATE DATE
+
+            create = gcp_object.get("creationTimestamp")
+            if create:
+                labels["labels"]["exyon_create"] = create
+
+            # CREATOR EMAIL
+
+            user = gcp_object.get("labels", {}).get("creator_email")
+            if user:
+                labels["labels"]["exyon_create_by"] = user
+
+            
+            
+
             self._batch.add(
                 self._google_api_client()
                 .instances()

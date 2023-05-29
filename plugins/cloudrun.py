@@ -111,6 +111,8 @@ class Cloudrun(Plugin):
             is_create = gcp_object["createTime"]
             is_create = is_create.split("T")[0]
             is_location = service_name.split("/")[3]
+            creator = gcp_object["creator"]	
+            creator = correctLabel(creator)
 
             # ADICIONAR CRIADOR ENTRE OUTROS LABELS
             
@@ -123,7 +125,8 @@ class Cloudrun(Plugin):
             service_body["labels"][f'{prefix}name'] = is_name
             service_body["labels"][f'{prefix}create'] = is_create
             service_body["labels"][f'{prefix}location'] = is_location
-
+            service_body["labels"][f'{prefix}create_by'] = creator
+            
             self._google_api_client().projects().locations().services().patch(
                 name=f"projects/{project_id}/locations/{is_location}/services/{is_name}",
                 body=service_body,
@@ -133,3 +136,40 @@ class Cloudrun(Plugin):
             if "SERVICE_STATUS_UNSPECIFIED" in gcp_object.get("status", {}):
                 logging.exception("Cloud Run service is not fully deployed yet, which is why we do not label it on-demand in the usual way")
             raise e
+
+
+def correctLabel(label):
+    label = label.replace("-", "_")
+    label = label.replace(" ", "_")
+    label = label.replace(".", "_")
+    label = label.replace(":", "_")
+    label = label.replace(";", "_")
+    label = label.replace(",", "_")
+    label = label.replace("?", "_")
+    label = label.replace("!", "_")
+    label = label.replace("(", "_")
+    label = label.replace(")", "_")
+    label = label.replace("[", "_")
+    label = label.replace("]", "_")
+    label = label.replace("{", "_")
+    label = label.replace("}", "_")
+    label = label.replace("<", "_")
+    label = label.replace(">", "_")
+    label = label.replace("/", "_")
+    label = label.replace("\\", "_")
+    label = label.replace("|", "_")
+    label = label.replace("=", "_")
+    label = label.replace("+", "_")
+    label = label.replace("'", "_")
+    label = label.replace('"', "_")
+    label = label.replace("@", "-")
+    label = label.replace("#", "_")
+    label = label.replace("$", "_")
+    label = label.replace("%", "_")
+    label = label.replace("^", "_")
+    label = label.replace("&", "_")
+    label = label.replace("*", "_")
+    label = label.replace("~", "_")
+    label = label.replace("`", "_")
+
+    return label
