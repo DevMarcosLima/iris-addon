@@ -94,10 +94,11 @@ class Instances(GceZonalBase):
 
             # CREATOR EMAIL
             metadata = self._get_instance_metadata(project_id, zone, gcp_object["name"])
+            logging.info("MARCOS TEST1 labels %s", metadata)
             creator_email = metadata.get("email", "")
             labels["labels"]["exyon_create_by"] = creator_email
 
-            logging.info("MARCOS TEST labels %s", labels)
+            logging.info("MARCOS TEST2 labels %s", labels)
 
             self._batch.add(
                 self._google_api_client()
@@ -121,3 +122,38 @@ class Instances(GceZonalBase):
         request = client.get(project=project_id, zone=zone, instance=instance_name)
         return request.metadata
 
+def correctLabel(label):
+    label = label.replace("-", "_")
+    label = label.replace(" ", "_")
+    label = label.replace(".", "_")
+    label = label.replace(":", "_")
+    label = label.replace(";", "_")
+    label = label.replace(",", "_")
+    label = label.replace("?", "_")
+    label = label.replace("!", "_")
+    label = label.replace("(", "_")
+    label = label.replace(")", "_")
+    label = label.replace("[", "_")
+    label = label.replace("]", "_")
+    label = label.replace("{", "_")
+    label = label.replace("}", "_")
+    label = label.replace("<", "_")
+    label = label.replace(">", "_")
+    label = label.replace("/", "_")
+    label = label.replace("\\", "_")
+    label = label.replace("|", "_")
+    label = label.replace("=", "_")
+    label = label.replace("+", "_")
+    label = label.replace("'", "_")
+    label = label.replace('"', "_")
+    label = label.replace("@", "-")
+    label = label.replace("#", "_")
+    label = label.replace("$", "_")
+    label = label.replace("%", "_")
+    label = label.replace("^", "_")
+    label = label.replace("&", "_")
+    label = label.replace("*", "_")
+    label = label.replace("~", "_")
+    label = label.replace("`", "_")
+
+    return label
