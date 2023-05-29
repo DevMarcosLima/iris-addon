@@ -93,12 +93,13 @@ class Instances(GceZonalBase):
                 labels["labels"]["exyon_create"] = create
 
             # CREATOR EMAIL
-            metadata = self._get_instance_metadata(project_id, zone, gcp_object["name"])
-            logging.info("MARCOS TEST1 labels %s", metadata)
-            creator_email = metadata.get("email", "")
-            labels["labels"]["exyon_create_by"] = creator_email
 
-            logging.info("MARCOS TEST2 labels %s", labels)
+            # user = gcp_object.get("labels", {}).get("creator_email")
+            # if user:
+            #     labels["labels"]["exyon_create_by"] = user
+
+            logging.info("MARCOS TEST labels %s", labels)
+            
 
             self._batch.add(
                 self._google_api_client()
@@ -111,49 +112,8 @@ class Instances(GceZonalBase):
                 ),
                 request_id=gcp_utils.generate_uuid(),
             )
-            # Could use the Cloud Client as follows, but apparently that does not support batching
-            # compute_v1.SetLabelsInstanceRequest(project=project_id, zone=zone, instance=name, labels=labels)
+            # Could use the Cloud Client as follows , but that apparently that does not support batching
+            #  compute_v1.SetLabelsInstanceRequest(project=project_id, zone=zone, instance=name, labels=labels)
             self.counter += 1
             if self.counter >= self._BATCH_SIZE:
                 self.do_batch()
-
-    def _get_instance_metadata(self, project_id, zone, instance_name) -> Dict:
-        client = self._create_cloudclient()
-        request = client.get(project=project_id, zone=zone, instance=instance_name)
-        return request.metadata
-
-def correctLabel(label):
-    label = label.replace("-", "_")
-    label = label.replace(" ", "_")
-    label = label.replace(".", "_")
-    label = label.replace(":", "_")
-    label = label.replace(";", "_")
-    label = label.replace(",", "_")
-    label = label.replace("?", "_")
-    label = label.replace("!", "_")
-    label = label.replace("(", "_")
-    label = label.replace(")", "_")
-    label = label.replace("[", "_")
-    label = label.replace("]", "_")
-    label = label.replace("{", "_")
-    label = label.replace("}", "_")
-    label = label.replace("<", "_")
-    label = label.replace(">", "_")
-    label = label.replace("/", "_")
-    label = label.replace("\\", "_")
-    label = label.replace("|", "_")
-    label = label.replace("=", "_")
-    label = label.replace("+", "_")
-    label = label.replace("'", "_")
-    label = label.replace('"', "_")
-    label = label.replace("@", "-")
-    label = label.replace("#", "_")
-    label = label.replace("$", "_")
-    label = label.replace("%", "_")
-    label = label.replace("^", "_")
-    label = label.replace("&", "_")
-    label = label.replace("*", "_")
-    label = label.replace("~", "_")
-    label = label.replace("`", "_")
-
-    return label
