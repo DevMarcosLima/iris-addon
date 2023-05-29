@@ -86,16 +86,15 @@ class Instances(GceZonalBase):
             zone = self._gcp_zone(gcp_object)
 
             # CREATE DATE
-            create = gcp_object.get("creationTimestamp")
+            create = gcp_object["creationTimestamp"]
+            create = create.split("T")[0]
+
             if create:
                 labels["labels"]["exyon_create"] = create
 
             # CREATOR EMAIL
-
-            # user = gcp_object.get("labels", {}).get("creator_email")
-            # if user:
-            #     labels["labels"]["exyon_create_by"] = user
-
+            
+            
             logging.info("MARCOS TEST labels %s", labels)
             
 
