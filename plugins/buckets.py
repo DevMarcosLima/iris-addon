@@ -92,11 +92,20 @@ class Buckets(Plugin):
     @log_time
     def label_resource(self, gcp_object, project_id):
         labels = self._build_labels(gcp_object, project_id)
+        
+
+
         if labels is None:
             return
 
         try:
             bucket_name = gcp_object["name"]
+                    # CREATE DATE
+            create_date = gcp_object["timeCreated"]
+            create_date = create_date.split("T")[0]
+
+            labels["labels"]["exyon_create"] = create_date
+
 
             self._batch.add(
                 self._google_api_client()
