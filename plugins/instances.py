@@ -77,6 +77,7 @@ class Instances(GceZonalBase):
     @log_time
     def label_resource(self, gcp_object, project_id):
         with self._write_lock:
+            logging.info("MARCOS TEST label_resource %s", gcp_object)
             labels = self._build_labels(gcp_object, project_id)
             logging.info("MARCOS TEST labels %s", labels)
             if labels is None:
@@ -91,9 +92,9 @@ class Instances(GceZonalBase):
 
             # CREATOR EMAIL
 
-            user = gcp_object.get("labels", {}).get("creator_email")
-            if user:
-                labels["labels"]["exyon_create_by"] = user
+            # user = gcp_object.get("labels", {}).get("creator_email")
+            # if user:
+            #     labels["labels"]["exyon_create_by"] = user
 
             logging.info("MARCOS TEST labels %s", labels)
             
