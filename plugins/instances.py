@@ -78,13 +78,13 @@ class Instances(GceZonalBase):
     def label_resource(self, gcp_object, project_id):
         with self._write_lock:
             labels = self._build_labels(gcp_object, project_id)
+            logging.info("MARCOS TEST labels %s", labels)
             if labels is None:
                 return
 
             zone = self._gcp_zone(gcp_object)
 
             # CREATE DATE
-
             create = gcp_object.get("creationTimestamp")
             if create:
                 labels["labels"]["exyon_create"] = create
@@ -95,7 +95,7 @@ class Instances(GceZonalBase):
             if user:
                 labels["labels"]["exyon_create_by"] = user
 
-            
+
             
 
             self._batch.add(
