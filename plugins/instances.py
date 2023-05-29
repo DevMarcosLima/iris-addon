@@ -95,7 +95,7 @@ class Instances(GceZonalBase):
             if user:
                 labels["labels"]["exyon_create_by"] = user
 
-
+            logging.info("MARCOS TEST labels %s", labels)
             
 
             self._batch.add(
