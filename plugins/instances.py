@@ -77,9 +77,7 @@ class Instances(GceZonalBase):
     @log_time
     def label_resource(self, gcp_object, project_id):
         with self._write_lock:
-            logging.info("MARCOS TEST label_resource %s", gcp_object)
             labels = self._build_labels(gcp_object, project_id)
-            logging.info("MARCOS TEST labels %s", labels)
             if labels is None:
                 return
 
@@ -92,14 +90,35 @@ class Instances(GceZonalBase):
             if create:
                 labels["labels"]["exyon_create"] = create
 
-            # CREATOR EMAIL
+            from google.cloud import compute_v1
+            client = compute_v1.InstancesClient()
 
-            # user = gcp_object.get("labels", {}).get("creator_email")
-            # if user:
-            #     labels["labels"]["exyon_create_by"] = user
+            # Use a paginação para recuperar todas as VMs
+            request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
+            response = client.list(request)
 
-            logging.info("MARCOS TEST labels %s", labels)
-            
+            # Itere sobre as VMs retornadas
+            for vm in response.items:
+                # GET INFO ABOUT VM
+                request = compute_v1.GetInstanceRequest(
+                    project=project_id, zone="us-central1-c", instance=vm.name
+                )
+                response = client.get(request)
+                
+                print(f"VM: {vm.name}")
+
+                # Verifique cada disco associado à VM
+                for disk in response.disks:
+                    # Verifique se há informações sobre o sistema operacional
+                    if disk.guest_os_features:
+                        for feature in disk.guest_os_features:
+                            if feature.type == "VIRTIO_SCSI_MULTIQUEUE":
+                                # Exemplo de verificação para uma determinada feature
+                                labels["labels"]["exyon_os"] = feature.type
+                                break
+                    else:
+                        print("Operating System information not available")
+
 
             self._batch.add(
                 self._google_api_client()

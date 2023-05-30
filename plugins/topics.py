@@ -54,36 +54,19 @@ class Topics(Plugin):
             return None
 
     def _list_all(self, project_id) -> List[Dict]:
-        all_resources = self._cloudclient().list_topics(request={"project": f"projects/{project_id}"})
-        topics = cloudclient_pb_objects_to_list_of_dicts(all_resources)
+        all_resources = self._cloudclient().list_topics(
+            request={"project": f"projects/{project_id}"}
+        )
+        return cloudclient_pb_objects_to_list_of_dicts(all_resources)
 
-        # Percorra cada tópico e obtenha informações adicionais
-        for topic in topics:
-            topic_path = topic["name"]
-            # Obtenha as informações detalhadas do tópico
-            detailed_topic = self.__get_resource(topic_path)
-            if detailed_topic:
-                # Adicione as informações extras ao dicionário do tópico existente
-                topic["creationTimestamp"] = detailed_topic.get("creationTimestamp")
-                # Adicione outras informações extras desejadas
-        logging.info("TOPICSMARCOS3 %s", topics)
-        return topics
-    
     @log_time
     def label_resource(self, gcp_object: Dict, project_id):
-        # LOG
-        # logging.info("TOPICSMARCOS %s", gcp_object)
         # This API does not accept label-fingerprint, so extracting just labels
         labels_outer = self._build_labels(gcp_object, project_id)
         if labels_outer is None:
             return
         labels = labels_outer["labels"]
 
-        # CREATE DATE
-        # create = gcp_object["creationTimestamp"]
-        # create = create.split("T")[0]
-
-        # labels["labels"]["exyon_create"] = create
 
         name = self._gcp_name(gcp_object)
         path = self._cloudclient().topic_path(project_id, name)

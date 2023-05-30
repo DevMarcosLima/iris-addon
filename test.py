@@ -1,60 +1,37 @@
-from googleapiclient import discovery
-import json
+from util.gcp_utils import add_loaded_lib
+from google.cloud import compute_v1
 
-from plugin import Plugin
+add_loaded_lib("compute_v1")
 
-srv = discovery.build("bigquery", "v2")
+project_id = "poc-iris3-exyon"
 
-def label_all():
-    project_id = "poc-iris3-exyon"
-    page_token = None
-    # while True:
-    # response = srv.apps().services().list(appsId="poc-iris3-exyon", pageToken=None).execute()
-    datasets = srv._cloudclient(project_id).list_datasets()
-    for dataset in datasets:
-        srv.__label_dataset_and_tables(project_id, dataset._properties)
+def list_all_vms(project_id):
+    client = compute_v1.InstancesClient()
 
+    # Use a paginação para recuperar todas as VMs
+    request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
+    response = client.list(request)
 
-def label_resource(gcp_object, project_id):
-    print(json.dumps(gcp_object, indent=4))
+    # Itere sobre as VMs retornadas
+    for vm in response.items:
+        # GET INFO ABOUT VM
+        request = compute_v1.GetInstanceRequest(
+            project=project_id, zone="us-central1-c", instance=vm.name
+        )
+        response = client.get(request)
+        
+        print(f"VM: {vm.name}")
 
+        # Verifique cada disco associado à VM
+        for disk in response.disks:
+            # Verifique se há informações sobre o sistema operacional
+            if disk.guest_os_features:
+                for feature in disk.guest_os_features:
+                    if feature.type == "VIRTIO_SCSI_MULTIQUEUE":
+                        # Exemplo de verificação para uma determinada feature
+                        print(f"Operating System: {feature.type}")
+                        break
+            else:
+                print("Operating System information not available")
 
-
-
-def correctLabel(label):
-    label = label.replace("-", "_")
-    label = label.replace(" ", "_")
-    label = label.replace(".", "_")
-    label = label.replace(":", "_")
-    label = label.replace(";", "_")
-    label = label.replace(",", "_")
-    label = label.replace("?", "_")
-    label = label.replace("!", "_")
-    label = label.replace("(", "_")
-    label = label.replace(")", "_")
-    label = label.replace("[", "_")
-    label = label.replace("]", "_")
-    label = label.replace("{", "_")
-    label = label.replace("}", "_")
-    label = label.replace("<", "_")
-    label = label.replace(">", "_")
-    label = label.replace("/", "_")
-    label = label.replace("\\", "_")
-    label = label.replace("|", "_")
-    label = label.replace("=", "_")
-    label = label.replace("+", "_")
-    label = label.replace("'", "_")
-    label = label.replace('"', "_")
-    label = label.replace("@", "-")
-    label = label.replace("#", "_")
-    label = label.replace("$", "_")
-    label = label.replace("%", "_")
-    label = label.replace("^", "_")
-    label = label.replace("&", "_")
-    label = label.replace("*", "_")
-    label = label.replace("~", "_")
-    label = label.replace("`", "_")
-
-    return label
-
-label_all()
+list_all_vms(project_id)
