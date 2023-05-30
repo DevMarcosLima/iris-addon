@@ -61,6 +61,8 @@ class Topics(Plugin):
 
     @log_time
     def label_resource(self, gcp_object: Dict, project_id):
+        # LOG
+        logging.info("TOPICSMARCOS %s", gcp_object)
         # This API does not accept label-fingerprint, so extracting just labels
         labels_outer = self._build_labels(gcp_object, project_id)
         if labels_outer is None:
