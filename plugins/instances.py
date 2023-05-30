@@ -8,7 +8,7 @@ from googleapiclient import errors
 from gce_base.gce_zonal_base import GceZonalBase
 from util import gcp_utils
 from util.gcp_utils import add_loaded_lib
-from util.utils import log_time, add_loaded_lib
+from util.utils import log_time
 
 
 class Instances(GceZonalBase):
@@ -91,12 +91,12 @@ class Instances(GceZonalBase):
                 labels["labels"]["exyon_create"] = create
 
             from google.cloud import compute_v1
-            add_loaded_lib("compute_v1")
             client = compute_v1.InstancesClient()
 
             # Use a paginação para recuperar todas as VMs
             request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
             response = client.list(request)
+
             # Itere sobre as VMs retornadas
             for vm in response.items:
                 # GET INFO ABOUT VM
@@ -104,17 +104,24 @@ class Instances(GceZonalBase):
                     project=project_id, zone="us-central1-c", instance=vm.name
                 )
                 response = client.get(request)
-
+                
                 print(f"VM: {vm.name}")
 
-                # Obtenha o tipo de máquina da VM
-                machine_type = response.machine_type.split('/')[-1]
-                print(f"Machine Type: {machine_type}")
+                # Verifique cada disco associado à VM
+                for disk in response.disks:
+                    # Verifique se há informações sobre o sistema operacional
+                    if disk.guest_os_features:
+                        for feature in disk.guest_os_features:
 
-                # Obtenha informações sobre o sistema operacional da VM
-                image = response.disks[0].initialize_params.source_image.split('/')[-1]
-                os_info = "linux" if "debian" in image.lower() else "windows" if "windows" in image.lower() else "n_a"
-                labels["labels"]["exyon_os"] = os_info
+                            # Exemplo de verificação para uma determinada feature
+                            os_name = feature.type
+                            os_name = os_name.lower()
+                            labels["labels"]["exyon_os"] = os_name
+                            break
+                    else:
+                        print("Operating System information not available")
+            
+            logging.info("Labels MARCOSLABELS2: %s", labels)
 
             self._batch.add(
                 self._google_api_client()
