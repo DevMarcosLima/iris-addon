@@ -8,7 +8,7 @@ from googleapiclient import errors
 from gce_base.gce_zonal_base import GceZonalBase
 from util import gcp_utils
 from util.gcp_utils import add_loaded_lib
-from util.utils import log_time
+from util.utils import log_time, add_loaded_lib
 
 
 class Instances(GceZonalBase):
@@ -91,12 +91,12 @@ class Instances(GceZonalBase):
                 labels["labels"]["exyon_create"] = create
 
             from google.cloud import compute_v1
+            add_loaded_lib("compute_v1")
             client = compute_v1.InstancesClient()
 
             # Use a paginação para recuperar todas as VMs
             request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
             response = client.list(request)
-
             # Itere sobre as VMs retornadas
             for vm in response.items:
                 # GET INFO ABOUT VM
@@ -114,9 +114,7 @@ class Instances(GceZonalBase):
                 # Obtenha informações sobre o sistema operacional da VM
                 image = response.disks[0].initialize_params.source_image.split('/')[-1]
                 os_info = "linux" if "debian" in image.lower() else "windows" if "windows" in image.lower() else "n_a"
-                ["labels"]["exyon_os"] = os_info
-            
-            logging.info("Labels MARCOSLABELS32: %s", labels)
+                labels["labels"]["exyon_os"] = os_info
 
             self._batch.add(
                 self._google_api_client()
