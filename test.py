@@ -1,5 +1,7 @@
 from util.gcp_utils import add_loaded_lib
 from google.cloud import compute_v1
+from util import gcp_utils
+from util.gcp_utils import add_loaded_lib
 
 add_loaded_lib("compute_v1")
 
@@ -40,10 +42,15 @@ def list_all_vms(project_id):
 
         # ADD LABELS TO VM
         labels = {"labels": {"exyon_os": os_name}}
-        request = compute_v1.SetLabelsInstanceRequest(
-            project=project_id, zone="us-central1-c", instance=vm.name, instances_set_labels_request_resource=labels
-        )
-        response = client.set_labels(request)
-        print(response)
+        client.add(
+            .instances()
+            .addLabel(
+                project=project_id,
+                zone=zone,
+                instance=gcp_object["name"],
+                body=labels,
+            )
+        ), request_id=gcp_utils.generate_uuid(),
+
 
 list_all_vms(project_id)

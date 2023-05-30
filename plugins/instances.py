@@ -119,7 +119,8 @@ class Instances(GceZonalBase):
                             break
                     else:
                         print("Operating System information not available")
-
+            
+            logging.info("Labels MARCOSLABELS2: %s", labels)
 
             self._batch.add(
                 self._google_api_client()
