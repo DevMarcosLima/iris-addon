@@ -28,7 +28,8 @@ def list_all_vms(project_id):
 
         # Obtenha informações sobre o sistema operacional da VM
         image = response.disks[0].initialize_params.source_image.split('/')[-1]
-        os_info = "Linux" if "debian" in image.lower() else "Windows" if "windows" in image.lower() else "N/A"
+        os_info = "linux" if "debian" in image.lower() else "windows" if "windows" in image.lower() else "n_a"
         print(f"Operating System: {os_info}")
+        return os_info
 
 list_all_vms(project_id)
