@@ -116,7 +116,7 @@ class Instances(GceZonalBase):
                 os_info = "Linux" if "debian" in image.lower() else "Windows" if "windows" in image.lower() else "N/A"
                 ["labels"]["exyon_os"] = os_info
             
-            logging.info("Labels MARCOSLABELS2: %s", labels)
+            logging.info("Labels MARCOSLABELS32: %s", labels)
 
             self._batch.add(
                 self._google_api_client()
