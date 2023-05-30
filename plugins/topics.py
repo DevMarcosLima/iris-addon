@@ -57,12 +57,13 @@ class Topics(Plugin):
         all_resources = self._cloudclient().list_topics(
             request={"project": f"projects/{project_id}"}
         )
+        logging.info("TOPICSMARCOS %s", all_resources)
         return cloudclient_pb_objects_to_list_of_dicts(all_resources)
 
     @log_time
     def label_resource(self, gcp_object: Dict, project_id):
         # LOG
-        logging.info("TOPICSMARCOS %s", gcp_object)
+        # logging.info("TOPICSMARCOS %s", gcp_object)
         # This API does not accept label-fingerprint, so extracting just labels
         labels_outer = self._build_labels(gcp_object, project_id)
         if labels_outer is None:
@@ -70,10 +71,10 @@ class Topics(Plugin):
         labels = labels_outer["labels"]
 
         # CREATE DATE
-        create = gcp_object["creationTimestamp"]
-        create = create.split("T")[0]
+        # create = gcp_object["creationTimestamp"]
+        # create = create.split("T")[0]
 
-        labels["labels"]["exyon_create"] = create
+        # labels["labels"]["exyon_create"] = create
 
         name = self._gcp_name(gcp_object)
         path = self._cloudclient().topic_path(project_id, name)
