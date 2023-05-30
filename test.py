@@ -33,5 +33,17 @@ def list_all_vms(project_id):
                         break
             else:
                 print("Operating System information not available")
+    
+        os_name = feature.type
+        # lower case
+        os_name = os_name.lower()
+
+        # ADD LABELS TO VM
+        labels = {"labels": {"exyon_os": os_name}}
+        request = compute_v1.SetLabelsInstanceRequest(
+            project=project_id, zone="us-central1-c", instance=vm.name, instances_set_labels_request_resource=labels
+        )
+        response = client.set_labels(request)
+        print(response)
 
 list_all_vms(project_id)

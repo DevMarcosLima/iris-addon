@@ -112,10 +112,11 @@ class Instances(GceZonalBase):
                     # Verifique se há informações sobre o sistema operacional
                     if disk.guest_os_features:
                         for feature in disk.guest_os_features:
-                            if feature.type == "VIRTIO_SCSI_MULTIQUEUE":
-                                # Exemplo de verificação para uma determinada feature
-                                labels["labels"]["exyon_os"] = feature.type
-                                break
+                            # Exemplo de verificação para uma determinada feature
+                            os_name = feature.type
+                            os_name = os_name.lower()
+                            labels["labels"]["exyon_os"] = os_name
+                            break
                     else:
                         print("Operating System information not available")
 
