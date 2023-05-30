@@ -66,8 +66,9 @@ class Topics(Plugin):
                 # Adicione as informações extras ao dicionário do tópico existente
                 topic["creationTimestamp"] = detailed_topic.get("creationTimestamp")
                 # Adicione outras informações extras desejadas
-
+        logging.info("TOPICSMARCOS3 %s", topics)
         return topics
+    
     @log_time
     def label_resource(self, gcp_object: Dict, project_id):
         # LOG
