@@ -54,12 +54,20 @@ class Topics(Plugin):
             return None
 
     def _list_all(self, project_id) -> List[Dict]:
-        all_resources = self._cloudclient().list_topics(
-            request={"project": f"projects/{project_id}"}
-        )
-        logging.info("TOPICSMARCOS %s", all_resources)
-        return cloudclient_pb_objects_to_list_of_dicts(all_resources)
+        all_resources = self._cloudclient().list_topics(request={"project": f"projects/{project_id}"})
+        topics = cloudclient_pb_objects_to_list_of_dicts(all_resources)
 
+        # Percorra cada tópico e obtenha informações adicionais
+        for topic in topics:
+            topic_path = topic["name"]
+            # Obtenha as informações detalhadas do tópico
+            detailed_topic = self.__get_resource(topic_path)
+            if detailed_topic:
+                # Adicione as informações extras ao dicionário do tópico existente
+                topic["creationTimestamp"] = detailed_topic.get("creationTimestamp")
+                # Adicione outras informações extras desejadas
+
+        return topics
     @log_time
     def label_resource(self, gcp_object: Dict, project_id):
         # LOG
