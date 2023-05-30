@@ -7,6 +7,7 @@ project_id = "poc-iris3-exyon"
 
 def list_all_vms(project_id):
     client = compute_v1.InstancesClient()
+    disks_client = compute_v1.DisksClient()
 
     # Use a paginação para recuperar todas as VMs
     request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
@@ -20,16 +21,12 @@ def list_all_vms(project_id):
         )
         response = client.get(request)
 
-        print(f"VM: {vm.name}")
-
-        # Obtenha o tipo de máquina da VM
-        machine_type = response.machine_type.split('/')[-1]
-        print(f"Machine Type: {machine_type}")
-
-        # Obtenha informações sobre o sistema operacional da VM
-        image = response.disks[0].initialize_params.source_image.split('/')[-1]
-        os_info = "linux" if "debian" in image.lower() else "windows" if "windows" in image.lower() else "n_a"
-        print(f"Operating System: {os_info}")
-        return os_info
+        # Listar os dados dos discos da VM
+        for disk in response.disks:
+            disk_request = compute_v1.GetDiskRequest(project=project_id, zone="us-central1-c", disk=disk.device_name)
+            disk_response = disks_client.get(disk_request)
+            image = disk_response.source_image.split('/')[-1]
+            print(f"Image: {image}")
+            
 
 list_all_vms(project_id)

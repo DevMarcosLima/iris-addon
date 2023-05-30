@@ -92,6 +92,7 @@ class Instances(GceZonalBase):
 
             from google.cloud import compute_v1
             client = compute_v1.InstancesClient()
+            disks_client = compute_v1.DisksClient()
 
             # Use a paginação para recuperar todas as VMs
             request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
@@ -104,22 +105,15 @@ class Instances(GceZonalBase):
                     project=project_id, zone="us-central1-c", instance=vm.name
                 )
                 response = client.get(request)
-                
-                print(f"VM: {vm.name}")
 
-                # Verifique cada disco associado à VM
+                # Listar os dados dos discos da VM
                 for disk in response.disks:
-                    # Verifique se há informações sobre o sistema operacional
-                    if disk.guest_os_features:
-                        for feature in disk.guest_os_features:
-                            # Exemplo de verificação para uma determinada feature
-                            os_name = feature.type
-                            os_name = os_name.lower()
-                            labels["labels"]["exyon_os"] = os_name
-                            break
-                    else:
-                        print("Operating System information not available")
-            logging.info("Labels MARCOSLABELS2: %s", labels)
+                    disk_request = compute_v1.GetDiskRequest(project=project_id, zone="us-central1-c", disk=disk.device_name)
+                    disk_response = disks_client.get(disk_request)
+                    image = disk_response.source_image.split('/')[-1]
+                    print(f"Image: {image}")
+                    labels["labels"]["exyon_image"] = correctLabel(image)
+                    
 
             self._batch.add(
                 self._google_api_client()
@@ -137,3 +131,40 @@ class Instances(GceZonalBase):
             self.counter += 1
             if self.counter >= self._BATCH_SIZE:
                 self.do_batch()
+
+
+def correctLabel(label):
+    label = label.replace("-", "_")
+    label = label.replace(" ", "_")
+    label = label.replace(".", "_")
+    label = label.replace(":", "_")
+    label = label.replace(";", "_")
+    label = label.replace(",", "_")
+    label = label.replace("?", "_")
+    label = label.replace("!", "_")
+    label = label.replace("(", "_")
+    label = label.replace(")", "_")
+    label = label.replace("[", "_")
+    label = label.replace("]", "_")
+    label = label.replace("{", "_")
+    label = label.replace("}", "_")
+    label = label.replace("<", "_")
+    label = label.replace(">", "_")
+    label = label.replace("/", "_")
+    label = label.replace("\\", "_")
+    label = label.replace("|", "_")
+    label = label.replace("=", "_")
+    label = label.replace("+", "_")
+    label = label.replace("'", "_")
+    label = label.replace('"', "_")
+    label = label.replace("@", "-")
+    label = label.replace("#", "_")
+    label = label.replace("$", "_")
+    label = label.replace("%", "_")
+    label = label.replace("^", "_")
+    label = label.replace("&", "_")
+    label = label.replace("*", "_")
+    label = label.replace("~", "_")
+    label = label.replace("`", "_")
+
+    return label
