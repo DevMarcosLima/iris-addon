@@ -67,6 +67,12 @@ class Topics(Plugin):
             return
         labels = labels_outer["labels"]
 
+        # CREATE DATE
+        create = gcp_object["creationTimestamp"]
+        create = create.split("T")[0]
+
+        labels["labels"]["exyon_create"] = create
+
         name = self._gcp_name(gcp_object)
         path = self._cloudclient().topic_path(project_id, name)
         # Local import to avoid burdening AppEngine memory.

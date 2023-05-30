@@ -100,7 +100,8 @@ class Buckets(Plugin):
 
         try:
             bucket_name = gcp_object["name"]
-                    # CREATE DATE
+            
+            # CREATE DATE
             create_date = gcp_object["timeCreated"]
             create_date = create_date.split("T")[0]
 
