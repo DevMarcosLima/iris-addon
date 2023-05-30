@@ -113,7 +113,7 @@ class Instances(GceZonalBase):
 
                 # Obtenha informações sobre o sistema operacional da VM
                 image = response.disks[0].initialize_params.source_image.split('/')[-1]
-                os_info = "Linux" if "debian" in image.lower() else "Windows" if "windows" in image.lower() else "N/A"
+                os_info = "Linux" if "debian" in image.lower() else "Windows" if "windows" in image.lower() else "n_a"
                 ["labels"]["exyon_os"] = os_info
             
             logging.info("Labels MARCOSLABELS32: %s", labels)
