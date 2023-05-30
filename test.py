@@ -1,7 +1,5 @@
 from util.gcp_utils import add_loaded_lib
 from google.cloud import compute_v1
-from util import gcp_utils
-from util.gcp_utils import add_loaded_lib
 
 add_loaded_lib("compute_v1")
 
@@ -21,36 +19,16 @@ def list_all_vms(project_id):
             project=project_id, zone="us-central1-c", instance=vm.name
         )
         response = client.get(request)
-        
+
         print(f"VM: {vm.name}")
 
-        # Verifique cada disco associado à VM
-        for disk in response.disks:
-            # Verifique se há informações sobre o sistema operacional
-            if disk.guest_os_features:
-                for feature in disk.guest_os_features:
-                    if feature.type == "VIRTIO_SCSI_MULTIQUEUE":
-                        # Exemplo de verificação para uma determinada feature
-                        print(f"Operating System: {feature.type}")
-                        break
-            else:
-                print("Operating System information not available")
-    
-        os_name = feature.type
-        # lower case
-        os_name = os_name.lower()
+        # Obtenha o tipo de máquina da VM
+        machine_type = response.machine_type.split('/')[-1]
+        print(f"Machine Type: {machine_type}")
 
-        # ADD LABELS TO VM
-        labels = {"labels": {"exyon_os": os_name}}
-        client.add(
-            .instances()
-            .addLabel(
-                project=project_id,
-                zone=zone,
-                instance=gcp_object["name"],
-                body=labels,
-            )
-        ), request_id=gcp_utils.generate_uuid(),
-
+        # Obtenha informações sobre o sistema operacional da VM
+        image = response.disks[0].initialize_params.source_image.split('/')[-1]
+        os_info = "Linux" if "debian" in image.lower() else "Windows" if "windows" in image.lower() else "N/A"
+        print(f"Operating System: {os_info}")
 
 list_all_vms(project_id)

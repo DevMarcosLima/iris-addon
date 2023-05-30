@@ -104,21 +104,17 @@ class Instances(GceZonalBase):
                     project=project_id, zone="us-central1-c", instance=vm.name
                 )
                 response = client.get(request)
-                
+
                 print(f"VM: {vm.name}")
 
-                # Verifique cada disco associado à VM
-                for disk in response.disks:
-                    # Verifique se há informações sobre o sistema operacional
-                    if disk.guest_os_features:
-                        for feature in disk.guest_os_features:
-                            # Exemplo de verificação para uma determinada feature
-                            os_name = feature.type
-                            os_name = os_name.lower()
-                            labels["labels"]["exyon_os"] = os_name
-                            break
-                    else:
-                        print("Operating System information not available")
+                # Obtenha o tipo de máquina da VM
+                machine_type = response.machine_type.split('/')[-1]
+                print(f"Machine Type: {machine_type}")
+
+                # Obtenha informações sobre o sistema operacional da VM
+                image = response.disks[0].initialize_params.source_image.split('/')[-1]
+                os_info = "Linux" if "debian" in image.lower() else "Windows" if "windows" in image.lower() else "N/A"
+                ["labels"]["exyon_os"] = os_info
             
             logging.info("Labels MARCOSLABELS2: %s", labels)
 
