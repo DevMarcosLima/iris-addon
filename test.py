@@ -1,91 +1,71 @@
-def correctLabel(label):
-    label = label.replace("-", "_")
-    label = label.replace(" ", "_")
-    label = label.replace(".", "_")
-    label = label.replace(":", "_")
-    label = label.replace(";", "_")
-    label = label.replace(",", "_")
-    label = label.replace("?", "_")
-    label = label.replace("!", "_")
-    label = label.replace("(", "_")
-    label = label.replace(")", "_")
-    label = label.replace("[", "_")
-    label = label.replace("]", "_")
-    label = label.replace("{", "_")
-    label = label.replace("}", "_")
-    label = label.replace("<", "_")
-    label = label.replace(">", "_")
-    label = label.replace("/", "_")
-    label = label.replace("\\", "_")
-    label = label.replace("|", "_")
-    label = label.replace("=", "_")
-    label = label.replace("+", "_")
-    label = label.replace("'", "_")
-    label = label.replace('"', "_")
-    label = label.replace("@", "-")
-    label = label.replace("#", "_")
-    label = label.replace("$", "_")
-    label = label.replace("%", "_")
-    label = label.replace("^", "_")
-    label = label.replace("&", "_")
-    label = label.replace("*", "_")
-    label = label.replace("~", "_")
-    label = label.replace("`", "_")
-
-    return label
-
 from googleapiclient.discovery import build
 import json
 import datetime
 import time
+import logging
+
 project_id = "poc-iris3-exyon"
 
 def list_all_datasets(project_id):
-    # Cria o objeto de serviço do BigQuery usando o Discovery
-    service = build("bigquery", "v2")
+    # Cria o objeto de serviço do Cloud SQL usando o Discovery
+    service = build("sqladmin", "v1beta4")
 
-    # Faz a chamada à API para listar os conjuntos de dados
-    datasets = service.datasets().list(projectId=project_id).execute()
+    # Lista as instancias do Cloud SQL
+    request = service.instances().list(project=project_id)
 
-    # Itera sobre os conjuntos de dados retornados
-    if "datasets" in datasets:
-        for dataset in datasets["datasets"]:
-            name = dataset['datasetReference']['datasetId']
-            label_resource(name, project_id)
+    while request is not None:
+        response = request.execute()
 
-def label_resource(dataset, project_id):
-    # Cria o objeto de serviço do BigQuery usando o Discovery
-    service = build("bigquery", "v2")
+        for instance in response["items"]:
+            name = instance["name"]
+            location = instance["region"]
+            databasev = instance["databaseInstalledVersion"]
+            create = instance["createTime"]
 
-    # Faz a chamada à API para obter os metadados do conjunto de dados
-    dataset_metadata = service.datasets().get(projectId=project_id, datasetId=dataset).execute()
-    
-    # GET access role owner userByEmail
-    creater = dataset_metadata['access'][2]['userByEmail']
+            # Trata o valor da data de criação
+            create = create.split("T")[0]
 
-    create_time = dataset_metadata['creationTime']
+            # Converte para letras minúsculas
+            name = name.lower()
+            location = location.lower()
+            databasev = databasev.lower()
 
-    # CONVERTE CREATE
-    create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
-    
-    creater = correctLabel(creater)
-    print(creater)
-    # INSERT LABEL
+            print("name: ", name)
+            print("location: ", location)
+            print("databasev: ", databasev)
 
-    if 'labels' not in dataset_metadata:
-        dataset_metadata['labels'] = {}
+            # Define as labels
+            labels = {
+                "exyon_name": name,
+                "exyon_location": location,
+                "exyon_database": databasev,
+                "exyon_create": create
+            }
 
-    dataset_metadata['labels']['exyon_create_by'] = creater
-    dataset_metadata['labels']['exyon_create'] = create_time
+            # Obtém a versão atual das configurações da instância
+            settings_version = instance["settings"]["settingsVersion"]
 
-    # UPDATE LABEL
-    print(dataset, dataset_metadata)
-    service.datasets().patch(projectId=project_id, datasetId=dataset, body=dataset_metadata).execute()
+            # Obtém o nível (tier) atual da instância
+            tier = instance["settings"]["tier"]
 
-    
+           
+            # PATCH
+            try:
+                # Atualiza as labels da instância
+                request = service.instances().patch(
+                    project=project_id,
+                    instance=name,
+                    body={"settings": {"userLabels": labels}},
+                )
+                response = request.execute()
+            except:
+                logging.info("A instância %s não foi atualizada, ela se encontra desligada", name)
+                pass
 
-    # Acessa os metadados do conjunto de dados
-    # print(json.dumps(dataset_metadata, indent=4))
+        # Continua para a próxima página de resultados, se houver
+        request = service.instances().list_next(previous_request=request, previous_response=response)
+
+def label_resource(gcp_object, project_id):
+    print("gcp_object: ", gcp_object)
 
 list_all_datasets(project_id)
-

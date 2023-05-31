@@ -104,23 +104,61 @@ class Cloudsql(Plugin):
 
     @log_time
     def label_resource(self, gcp_object, project_id):
-        labels = self._build_labels(gcp_object, project_id)
-        if labels is None:
-            return
-        try:
-            database_instance_body = {"settings": {"userLabels": labels["labels"]}}
+        # Cria o objeto de serviço do Cloud SQL usando o Discovery
+        from googleapiclient.discovery import build
+        service = build("sqladmin", "v1beta4")
 
-            self._google_api_client().instances().patch(
-                project=project_id,
-                body=database_instance_body,
-                instance=gcp_object["name"],
-            ).execute()
+        # Lista as instancias do Cloud SQL
+        request = service.instances().list(project=project_id)
 
-        except errors.HttpError as e:
-            if "PENDING_CREATE" == gcp_object.get("state"):
-                logging.exception(
-                    "CloudSQL cannot accept labels until it is fully initialized, which is why"
-                    "we do not label it on-demand in the usual way",
-                )
+        while request is not None:
+            response = request.execute()
 
-            raise e
+            for instance in response["items"]:
+                name = instance["name"]
+                location = instance["region"]
+                databasev = instance["databaseInstalledVersion"]
+                create = instance["createTime"]
+
+                # Trata o valor da data de criação
+                create = create.split("T")[0]
+
+                # Converte para letras minúsculas
+                name = name.lower()
+                location = location.lower()
+                databasev = databasev.lower()
+
+                print("name: ", name)
+                print("location: ", location)
+                print("databasev: ", databasev)
+
+                # Define as labels
+                labels = {
+                    "exyon_name": name,
+                    "exyon_location": location,
+                    "exyon_database": databasev,
+                    "exyon_create": create
+                }
+
+                # Obtém a versão atual das configurações da instância
+                settings_version = instance["settings"]["settingsVersion"]
+
+                # Obtém o nível (tier) atual da instância
+                tier = instance["settings"]["tier"]
+
+            
+                # PATCH
+                try:
+                    # Atualiza as labels da instância
+                    request = service.instances().patch(
+                        project=project_id,
+                        instance=name,
+                        body={"settings": {"userLabels": labels}},
+                    )
+                    response = request.execute()
+                except:
+                    logging.info("A instância %s não foi atualizada, ela se encontra desligada", name)
+                    pass
+
+            # Continua para a próxima página de resultados, se houver
+            request = service.instances().list_next(previous_request=request, previous_response=response)

@@ -182,8 +182,8 @@ class Bigquery(Plugin):
                 dataset_metadata['labels'] = {}
 
             # INSERT LABEL in ds.labels
-            ds.labels['creater'] = creater
-            ds.labels['create_time'] = create_time
+            ds.labels['exyon_create_by'] = creater
+            ds.labels['exyon_create'] = create_time
             
 
 
