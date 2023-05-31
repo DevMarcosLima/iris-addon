@@ -159,6 +159,35 @@ class Bigquery(Plugin):
             client = self._cloudclient(project_id)
             ds = client.get_dataset(f"{project_id}.{dataset_id}")
             ds.labels = labels["labels"]
+            from googleapiclient.discovery import build
+            import datetime
+
+            service = build("bigquery", "v2")
+
+            dataset_metadata = service.datasets().get(projectId=project_id, datasetId=dataset_id).execute()
+            logging.info(f"MARCOSBIGQ {dataset_metadata}")
+            # GET access role owner userByEmail
+            creater = dataset_metadata['access'][2]['userByEmail']
+
+            create_time = dataset_metadata['creationTime']
+
+            # CONVERTE CREATE
+            create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
+            
+            creater = correctLabel(creater)
+            print(creater)
+            # INSERT LABEL
+
+            if 'labels' not in dataset_metadata:
+                dataset_metadata['labels'] = {}
+
+            # INSERT LABEL in ds.labels
+            ds.labels['creater'] = creater
+            ds.labels['create_time'] = create_time
+            
+
+
+
             client.update_dataset(ds, ["labels"])
         except Exception:
             logging.exception("")
