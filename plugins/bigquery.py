@@ -200,6 +200,7 @@ class Bigquery(Plugin):
 
     @log_time
     def label_resource(self, gcp_object, project_id):
+        logging.info(f"MARCOSBIGQUERY: {gcp_object}")
         try:
             if gcp_object["kind"] == "bigquery#dataset":
                 self.__label_one_dataset(gcp_object, project_id)
@@ -208,7 +209,6 @@ class Bigquery(Plugin):
             
             from googleapiclient.discovery import build
             import datetime
-
             # Cria o objeto de serviço do BigQuery usando o Discovery
             service = build("bigquery", "v2")
 
@@ -232,7 +232,7 @@ class Bigquery(Plugin):
                     create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
                     
                     creater = correctLabel(creater)
-                    print(creater)
+                    
                     # INSERT LABEL
 
                     if 'labels' not in dataset_metadata:
@@ -241,6 +241,7 @@ class Bigquery(Plugin):
                     dataset_metadata['labels']['exyon_create_by'] = creater
                     dataset_metadata['labels']['exyon_create'] = create_time
 
+                    print(f"MARCOSBIGQ: {dataset_metadata}")
                     # UPDATE LABEL
                     print(dataset, dataset_metadata)
                     service.datasets().patch(projectId=project_id, datasetId=dataset, body=dataset_metadata).execute()
