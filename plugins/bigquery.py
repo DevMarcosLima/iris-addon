@@ -205,5 +205,83 @@ class Bigquery(Plugin):
                 self.__label_one_dataset(gcp_object, project_id)
             else:
                 self.__label_one_table(gcp_object, project_id)
+            
+            from googleapiclient.discovery import build
+            import datetime
+
+            # Cria o objeto de serviço do BigQuery usando o Discovery
+            service = build("bigquery", "v2")
+
+            # Faz a chamada à API para listar os conjuntos de dados
+            datasets = service.datasets().list(projectId=project_id).execute()
+
+            # Itera sobre os conjuntos de dados retornados
+            if "datasets" in datasets:
+                for dataset in datasets["datasets"]:
+                    dataset = dataset['datasetReference']['datasetId']
+                    
+                    # Faz a chamada à API para obter os metadados do conjunto de dados
+                    dataset_metadata = service.datasets().get(projectId=project_id, datasetId=dataset).execute()
+                    
+                    # GET access role owner userByEmail
+                    creater = dataset_metadata['access'][2]['userByEmail']
+
+                    create_time = dataset_metadata['creationTime']
+
+                    # CONVERTE CREATE
+                    create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
+                    
+                    creater = correctLabel(creater)
+                    print(creater)
+                    # INSERT LABEL
+
+                    if 'labels' not in dataset_metadata:
+                        dataset_metadata['labels'] = {}
+
+                    dataset_metadata['labels']['exyon_create_by'] = creater
+                    dataset_metadata['labels']['exyon_create'] = create_time
+
+                    # UPDATE LABEL
+                    print(dataset, dataset_metadata)
+                    service.datasets().patch(projectId=project_id, datasetId=dataset, body=dataset_metadata).execute()
+    
+
         except Exception:
             logging.exception("")
+
+
+def correctLabel(label):
+    label = label.replace("-", "_")
+    label = label.replace(" ", "_")
+    label = label.replace(".", "_")
+    label = label.replace(":", "_")
+    label = label.replace(";", "_")
+    label = label.replace(",", "_")
+    label = label.replace("?", "_")
+    label = label.replace("!", "_")
+    label = label.replace("(", "_")
+    label = label.replace(")", "_")
+    label = label.replace("[", "_")
+    label = label.replace("]", "_")
+    label = label.replace("{", "_")
+    label = label.replace("}", "_")
+    label = label.replace("<", "_")
+    label = label.replace(">", "_")
+    label = label.replace("/", "_")
+    label = label.replace("\\", "_")
+    label = label.replace("|", "_")
+    label = label.replace("=", "_")
+    label = label.replace("+", "_")
+    label = label.replace("'", "_")
+    label = label.replace('"', "_")
+    label = label.replace("@", "-")
+    label = label.replace("#", "_")
+    label = label.replace("$", "_")
+    label = label.replace("%", "_")
+    label = label.replace("^", "_")
+    label = label.replace("&", "_")
+    label = label.replace("*", "_")
+    label = label.replace("~", "_")
+    label = label.replace("`", "_")
+
+    return label

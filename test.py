@@ -1,32 +1,91 @@
-from util.gcp_utils import add_loaded_lib
-from google.cloud import compute_v1
+def correctLabel(label):
+    label = label.replace("-", "_")
+    label = label.replace(" ", "_")
+    label = label.replace(".", "_")
+    label = label.replace(":", "_")
+    label = label.replace(";", "_")
+    label = label.replace(",", "_")
+    label = label.replace("?", "_")
+    label = label.replace("!", "_")
+    label = label.replace("(", "_")
+    label = label.replace(")", "_")
+    label = label.replace("[", "_")
+    label = label.replace("]", "_")
+    label = label.replace("{", "_")
+    label = label.replace("}", "_")
+    label = label.replace("<", "_")
+    label = label.replace(">", "_")
+    label = label.replace("/", "_")
+    label = label.replace("\\", "_")
+    label = label.replace("|", "_")
+    label = label.replace("=", "_")
+    label = label.replace("+", "_")
+    label = label.replace("'", "_")
+    label = label.replace('"', "_")
+    label = label.replace("@", "-")
+    label = label.replace("#", "_")
+    label = label.replace("$", "_")
+    label = label.replace("%", "_")
+    label = label.replace("^", "_")
+    label = label.replace("&", "_")
+    label = label.replace("*", "_")
+    label = label.replace("~", "_")
+    label = label.replace("`", "_")
 
-add_loaded_lib("compute_v1")
+    return label
 
+from googleapiclient.discovery import build
+import json
+import datetime
+import time
 project_id = "poc-iris3-exyon"
 
-def list_all_vms(project_id):
-    client = compute_v1.InstancesClient()
-    disks_client = compute_v1.DisksClient()
+def list_all_datasets(project_id):
+    # Cria o objeto de serviço do BigQuery usando o Discovery
+    service = build("bigquery", "v2")
 
-    # Use a paginação para recuperar todas as VMs
-    request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
-    response = client.list(request)
+    # Faz a chamada à API para listar os conjuntos de dados
+    datasets = service.datasets().list(projectId=project_id).execute()
 
-    # Itere sobre as VMs retornadas
-    for vm in response.items:
-        # GET INFO ABOUT VM
-        request = compute_v1.GetInstanceRequest(
-            project=project_id, zone="us-central1-c", instance=vm.name
-        )
-        response = client.get(request)
+    # Itera sobre os conjuntos de dados retornados
+    if "datasets" in datasets:
+        for dataset in datasets["datasets"]:
+            name = dataset['datasetReference']['datasetId']
+            label_resource(name, project_id)
 
-        # Listar os dados dos discos da VM
-        for disk in response.disks:
-            disk_request = compute_v1.GetDiskRequest(project=project_id, zone="us-central1-c", disk=disk.device_name)
-            disk_response = disks_client.get(disk_request)
-            image = disk_response.source_image.split('/')[-1]
-            print(f"Image: {image}")
-            
+def label_resource(dataset, project_id):
+    # Cria o objeto de serviço do BigQuery usando o Discovery
+    service = build("bigquery", "v2")
 
-list_all_vms(project_id)
+    # Faz a chamada à API para obter os metadados do conjunto de dados
+    dataset_metadata = service.datasets().get(projectId=project_id, datasetId=dataset).execute()
+    
+    # GET access role owner userByEmail
+    creater = dataset_metadata['access'][2]['userByEmail']
+
+    create_time = dataset_metadata['creationTime']
+
+    # CONVERTE CREATE
+    create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
+    
+    creater = correctLabel(creater)
+    print(creater)
+    # INSERT LABEL
+
+    if 'labels' not in dataset_metadata:
+        dataset_metadata['labels'] = {}
+
+    dataset_metadata['labels']['exyon_create_by'] = creater
+    dataset_metadata['labels']['exyon_create'] = create_time
+
+    # UPDATE LABEL
+    print(dataset, dataset_metadata)
+    service.datasets().patch(projectId=project_id, datasetId=dataset, body=dataset_metadata).execute()
+
+    
+
+    # Acessa os metadados do conjunto de dados
+    # print(json.dumps(dataset_metadata, indent=4))
+
+list_all_datasets(project_id)
+
