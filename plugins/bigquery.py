@@ -244,7 +244,8 @@ class Bigquery(Plugin):
                     # UPDATE LABEL
                     print(dataset, dataset_metadata)
                     service.datasets().patch(projectId=project_id, datasetId=dataset, body=dataset_metadata).execute()
-    
+            
+            logging.info(f"MARCOSBIGQUERY: {project_id}")
 
         except Exception:
             logging.exception("")
