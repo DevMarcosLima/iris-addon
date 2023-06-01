@@ -37,12 +37,10 @@ class Cloudrun(Plugin):
         try:
             return gcp_object["metadata"]["labels"]["region"].lower()
         except KeyError:
-            logging.exception(f"Error getting region for {gcp_object['metadata']['name']} MARCOSx003")
             return None
 
     def _get_resource(self, project_id, name):
         try:
-            logging.warning(f"MARCOS Getting resource {name} in project {project_id}")
             result = (
                 self._google_api_client()
                 .projects()
@@ -51,11 +49,8 @@ class Cloudrun(Plugin):
                 .get(name=name)
                 .execute()
             )
-            logging.warning(f"MARCOS Getting resource {name} in project {project_id}")
-            logging.info(f"MARCOS Getting resource {name} in project {project_id}")
             return result
         except errors.HttpError:
-            logging.exception(f"Error getting resource {name} in project {project_id} MARCOSx001")
             return None
 
     def get_gcp_object(self, log_data: Dict) -> Optional[Dict]:
@@ -67,14 +62,11 @@ class Cloudrun(Plugin):
             service = self._get_resource("poc-iris3-exyon", service)
             return service
         except Exception:
-            logging.exception(f"Error getting resource {log_data['resource']['name']} MARCOSx002")
             return None
 
     def label_all(self, project_id):
         # LIST ALL CLOUD RUN SERVICES
         # with timing(f"label_all({type(self).__name__}) in {project_id}"):
-        logging.warning(f"0x1 MARCOS Labeling all {type(self).__name__} in {project_id}")
-        logging.info(f"0x1 MARCOS Labeling all {type(self).__name__} in {project_id}")
         page_token = None
         try:
             while True:
@@ -97,7 +89,6 @@ class Cloudrun(Plugin):
     def label_resource(self, gcp_object, project_id):
         labels = gcp_object.get("labels", {})
         if labels is None:
-            logging.warning(f"1x2 MARCOS Skipping {gcp_object['name']} because it is not labeled")
             return
         try:
             service_name = gcp_object["name"]

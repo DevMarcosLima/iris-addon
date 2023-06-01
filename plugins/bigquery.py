@@ -165,7 +165,6 @@ class Bigquery(Plugin):
             service = build("bigquery", "v2")
 
             dataset_metadata = service.datasets().get(projectId=project_id, datasetId=dataset_id).execute()
-            logging.info(f"MARCOSBIGQ {dataset_metadata}")
             # GET access role owner userByEmail
             creater = dataset_metadata['access'][2]['userByEmail']
 
@@ -229,7 +228,6 @@ class Bigquery(Plugin):
 
     @log_time
     def label_resource(self, gcp_object, project_id):
-        logging.info(f"MARCOSBIGQUERY: {gcp_object}")
         try:
             if gcp_object["kind"] == "bigquery#dataset":
                 self.__label_one_dataset(gcp_object, project_id)
@@ -270,13 +268,11 @@ class Bigquery(Plugin):
                     dataset_metadata['labels']['exyon_create_by'] = creater
                     dataset_metadata['labels']['exyon_create'] = create_time
 
-                    print(f"MARCOSBIGQ: {dataset_metadata}")
                     # UPDATE LABEL
                     print(dataset, dataset_metadata)
                     service.datasets().patch(projectId=project_id, datasetId=dataset, body=dataset_metadata).execute()
             
-            logging.info(f"MARCOSBIGQUERY: {project_id}")
-
+            
         except Exception:
             logging.exception("")
 
