@@ -122,6 +122,9 @@ class Cloudsql(Plugin):
 
                 # Trata o valor da data de criação
                 create = create.split("T")[0]
+                # TRANSFORMA A DATA EM ANO-MES
+                create = create.split("-")[0] + "-" + create.split("-")[1]
+                
 
                 # Converte para letras minúsculas
                 name = name.lower()
@@ -137,7 +140,7 @@ class Cloudsql(Plugin):
                     "exyon_name": name,
                     "exyon_location": location,
                     "exyon_database": databasev,
-                    "exyon_create": create
+                    "ano-mes": create
                 }
 
                 # Obtém a versão atual das configurações da instância

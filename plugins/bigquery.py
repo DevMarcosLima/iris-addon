@@ -171,8 +171,10 @@ class Bigquery(Plugin):
             create_time = dataset_metadata['creationTime']
 
             # CONVERTE CREATE
-            create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
+            create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m')
             
+
+
             creater = correctLabel(creater)
             print(creater)
             # INSERT LABEL
@@ -182,7 +184,7 @@ class Bigquery(Plugin):
 
             # INSERT LABEL in ds.labels
             ds.labels['exyon_create_by'] = creater
-            ds.labels['exyon_create'] = create_time
+            ds.labels['ano-mes'] = create_time
             
 
 
@@ -256,7 +258,7 @@ class Bigquery(Plugin):
                     create_time = dataset_metadata['creationTime']
 
                     # CONVERTE CREATE
-                    create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m-%d')
+                    create_time = datetime.datetime.fromtimestamp(int(create_time)/1000).strftime('%Y-%m')
                     
                     creater = correctLabel(creater)
                     
@@ -266,7 +268,7 @@ class Bigquery(Plugin):
                         dataset_metadata['labels'] = {}
 
                     dataset_metadata['labels']['exyon_create_by'] = creater
-                    dataset_metadata['labels']['exyon_create'] = create_time
+                    dataset_metadata['labels']['ano-mes'] = create_time
 
                     # UPDATE LABEL
                     print(dataset, dataset_metadata)

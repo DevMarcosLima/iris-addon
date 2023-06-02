@@ -86,9 +86,11 @@ class Instances(GceZonalBase):
             # CREATE DATE
             create = gcp_object["creationTimestamp"]
             create = create.split("T")[0]
+            # TRANFORMAR EM ANO-MES
+            create = create.split("-")[0] + "-" + create.split("-")[1]
 
             if create:
-                labels["labels"]["exyon_create"] = create
+                labels["labels"]["ano-mes"] = create
 
             from google.cloud import compute_v1
             client = compute_v1.InstancesClient()
