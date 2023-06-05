@@ -114,8 +114,14 @@ class Instances(GceZonalBase):
                     disk_response = disks_client.get(disk_request)
                     image = disk_response.source_image.split('/')[-1]
                     print(f"Image: {image}")
-                    labels["labels"]["exyon_image"] = correctLabel(image)
-                    
+                    labels["labels"]["so"] = correctLabel(image)
+
+            
+            # DELETE ["labels"]["exyon_name"] AND ADD ["labels"]["vm"]
+            
+            nameVM = labels["labels"].pop("exyon_name", None)
+            labels["labels"]["vm"] = nameVM
+
 
             self._batch.add(
                 self._google_api_client()

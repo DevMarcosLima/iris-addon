@@ -105,8 +105,10 @@ class Buckets(Plugin):
             create_date = gcp_object["timeCreated"]
             create_date = create_date.split("T")[0]
 
-            labels["labels"]["exyon_create"] = create_date
-
+            labels["labels"]["ano-mes"] = create_date
+            
+            nameVM = labels["labels"].pop("exyon_name", None)
+            labels["labels"]["bucket"] = nameVM
 
             self._batch.add(
                 self._google_api_client()
