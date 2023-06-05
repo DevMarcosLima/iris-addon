@@ -101,6 +101,8 @@ class Cloudrun(Plugin):
             is_name = service_name.split("/")[-1]
             is_create = gcp_object["createTime"]
             is_create = is_create.split("T")[0]
+            # aaaa-mm
+            is_create = is_create.split("-")[0] + "-" + is_create.split("-")[1]
             is_location = service_name.split("/")[3]
             creator = gcp_object["creator"]	
             creator = correctLabel(creator)
@@ -113,8 +115,8 @@ class Cloudrun(Plugin):
                 service_body["labels"] = {}
             prefix = "exyon_"
             # ADD LABELS
-            service_body["labels"][f'{prefix}name'] = is_name
-            service_body["labels"][f'{prefix}create'] = is_create
+            service_body["labels"][f'cloud-run'] = is_name
+            service_body["labels"][f'ano-mes'] = is_create
             service_body["labels"][f'{prefix}location'] = is_location
             service_body["labels"][f'{prefix}create_by'] = creator
             

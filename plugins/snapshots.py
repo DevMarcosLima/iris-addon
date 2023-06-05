@@ -77,7 +77,8 @@ class Snapshots(GceBase):
     @log_time
     def label_resource(self, gcp_object, project_id):
         labels = self._build_labels(gcp_object, project_id)
-
+        nameVM = labels["labels"].pop("exyon_name", None)
+        labels["labels"]["snapshot"] = nameVM
         self._batch.add(  # Using Google Client API because CloudClient has, I think, no batch functionality
             self._google_api_client()
             .snapshots()

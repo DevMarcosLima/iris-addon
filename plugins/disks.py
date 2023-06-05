@@ -89,9 +89,14 @@ class Disks(GceZonalBase):
             # CREATE DATE
             create = gcp_object["creationTimestamp"]
             create = create.split("T")[0]
+            # aaaa-mm
+            create = create.split("-")[0] + "-" + create.split("-")[1]
 
             if create:
                 labels["labels"]["exyon_create"] = create
+
+            nameVM = labels["labels"].pop("exyon_name", None)
+            labels["labels"]["disk"] = nameVM
 
             self._batch.add(
                 self._google_api_client()

@@ -104,6 +104,8 @@ class Buckets(Plugin):
             # CREATE DATE
             create_date = gcp_object["timeCreated"]
             create_date = create_date.split("T")[0]
+            # aaaa-mm
+            create_date = create_date.split("-")[0] + "-" + create_date.split("-")[1]
 
             labels["labels"]["ano-mes"] = create_date
             
