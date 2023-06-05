@@ -111,6 +111,8 @@ class Buckets(Plugin):
             
             nameVM = labels["labels"].pop("exyon_name", None)
             labels["labels"]["bucket"] = nameVM
+            labels["labels"]["custo-bucket"] = nameVM
+
 
             self._batch.add(
                 self._google_api_client()

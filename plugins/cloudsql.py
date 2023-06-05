@@ -138,6 +138,7 @@ class Cloudsql(Plugin):
                 # Define as labels
                 labels = {
                     "cloud-sql": name,
+                    "custo-cloud-sql": name,
                     "exyon_location": location,
                     "bd": databasev,
                     "ano-mes": create

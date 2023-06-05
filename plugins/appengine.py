@@ -116,6 +116,7 @@ class Appengine(Plugin):
             # create_time = correctLabel(create_time)
             # ADD LABELS
             gcp_object['labels'][f'app-engine'] = service_name
+            gcp_object['labels'][f'custo-app-engine'] = service_name
             gcp_object['labels'][f'{prefix}create_by'] = creator
             gcp_object['labels'][f'ano-mes'] = create_time
             

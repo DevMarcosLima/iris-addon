@@ -121,6 +121,7 @@ class Instances(GceZonalBase):
             
             nameVM = labels["labels"].pop("exyon_name", None)
             labels["labels"]["vm"] = nameVM
+            labels["labels"]["custo-vm"] = nameVM
 
 
             self._batch.add(
