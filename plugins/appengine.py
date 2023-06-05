@@ -103,6 +103,8 @@ class Appengine(Plugin):
             create_time = response["versions"][0]["createTime"]
             # CREATE TIME LAST VERSION
             create_time = create_time.split("T")[0]
+            # aaaa-mm
+            create_time = create_time.split("-")[0] + "-" + create_time.split("-")[1]
             
 
             # add labels
@@ -113,9 +115,9 @@ class Appengine(Plugin):
             creator = correctLabel(creator)
             # create_time = correctLabel(create_time)
             # ADD LABELS
-            gcp_object['labels'][f'{prefix}name'] = service_name
+            gcp_object['labels'][f'app-engine'] = service_name
             gcp_object['labels'][f'{prefix}create_by'] = creator
-            gcp_object['labels'][f'{prefix}create'] = create_time
+            gcp_object['labels'][f'ano-mes'] = create_time
             
             # print(json.dumps(gcp_object, indent=4))
             self._google_api_client().apps().services().patch(    

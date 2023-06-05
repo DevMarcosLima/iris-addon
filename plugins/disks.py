@@ -93,7 +93,7 @@ class Disks(GceZonalBase):
             create = create.split("-")[0] + "-" + create.split("-")[1]
 
             if create:
-                labels["labels"]["exyon_create"] = create
+                labels["labels"]["ano-mes"] = create
 
             nameVM = labels["labels"].pop("exyon_name", None)
             labels["labels"]["disk"] = nameVM
