@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import List, Dict, Optional
 
 from googleapiclient import errors
+import datetime
 
 from plugin import Plugin
 from util.gcp_utils import (
@@ -65,8 +66,82 @@ class Topics(Plugin):
         labels_outer = self._build_labels(gcp_object, project_id)
         if labels_outer is None:
             return
+        
         labels = labels_outer["labels"]
 
+        from google.cloud import logging
+
+        def correctLabel(label):
+            label = label.replace("-", "_")
+            label = label.replace(" ", "_")
+            label = label.replace(".", "_")
+            label = label.replace(":", "_")
+            label = label.replace(";", "_")
+            label = label.replace(",", "_")
+            label = label.replace("?", "_")
+            label = label.replace("!", "_")
+            label = label.replace("(", "_")
+            label = label.replace(")", "_")
+            label = label.replace("[", "_")
+            label = label.replace("]", "_")
+            label = label.replace("{", "_")
+            label = label.replace("}", "_")
+            label = label.replace("<", "_")
+            label = label.replace(">", "_")
+            label = label.replace("/", "_")
+            label = label.replace("\\", "_")
+            label = label.replace("|", "_")
+            label = label.replace("=", "_")
+            label = label.replace("+", "_")
+            label = label.replace("'", "_")
+            label = label.replace('"', "_")
+            label = label.replace("@", "-")
+            label = label.replace("#", "_")
+            label = label.replace("$", "_")
+            label = label.replace("%", "_")
+            label = label.replace("^", "_")
+            label = label.replace("&", "_")
+            label = label.replace("*", "_")
+            label = label.replace("~", "_")
+            label = label.replace("`", "_")
+
+            return label
+        
+        project_id = "poc-iris3-exyon"
+        filter_key = "google.pubsub.v1.Publisher.CreateTopic"
+        
+        client = logging.Client(project=project_id)
+
+        # Defina a data limite para 30 dias atrás a partir da data atual
+        data_limite = datetime.datetime.now() - datetime.timedelta(days=30)
+
+        # Formate a data limite no formato adequado
+        data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
+        filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"topico-audit-log-test"'
+        entries = client.list_entries(filter_=filtro)
+        # AND protoPayload.authorizationInfo.request.name:"topico-audit-log-test"
+        for entry in entries:
+            # Acesse as informações do registro de log no objeto entry
+            
+            payload_dict = dict(entry.payload)
+            
+            # Acesse as informações do registro de log no dicionário payload_dict
+            if 'authenticationInfo' in payload_dict:
+                principal_email = payload_dict['authenticationInfo'].get('principalEmail')
+                principal_email = correctLabel(principal_email)
+
+            if 'requestMetadata' in payload_dict:
+                date_create = payload_dict['requestMetadata'].get('requestAttributes').get('time')
+                date_create = date_create.split("T")[0]
+
+            print(date_create)
+            print(principal_email)
+            # JSON object
+        
+        labels["exyon_create_by"] = principal_email
+        labels["ano-mes"] = date_create
 
         name = self._gcp_name(gcp_object)
         path = self._cloudclient().topic_path(project_id, name)
