@@ -135,6 +135,8 @@ class Cloudsql(Plugin):
                 print("name: ", name)
                 print("location: ", location)
                 print("databasev: ", databasev)
+                
+                from google.cloud import logging
 
                 def correctLabel(label):
                     label = label.replace("-", "_")
@@ -171,8 +173,10 @@ class Cloudsql(Plugin):
                     label = label.replace("`", "_")
 
                     return label
+               
                 project_id = "poc-iris3-exyon"
                 filter_key = "cloudsql.instances.create"
+                
                 client = logging.Client(project=project_id)
 
                 # Defina a data limite para 30 dias atrás a partir da data atual
