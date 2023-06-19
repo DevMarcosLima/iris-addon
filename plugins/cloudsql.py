@@ -153,9 +153,9 @@ class Cloudsql(Plugin):
 
                 filter_key = "cloudsql.instances.create"
 
-                email = list_audit_logs(project_id, filter_key)
-                # ADD CREATOR
-                labels["exyon_create_by"] = email
+                # email = list_audit_logs(project_id, filter_key)
+                # # ADD CREATOR
+                # labels["exyon_create_by"] = email
                 # PATCH
                 try:
                     # Atualiza as labels da instância
