@@ -5,6 +5,7 @@ from googleapiclient import errors
 
 from plugin import Plugin
 from util.utils import log_time, timing
+from plugins.decorator import list_audit_logs
 
 
 class Cloudsql(Plugin):
@@ -150,7 +151,11 @@ class Cloudsql(Plugin):
                 # Obtém o nível (tier) atual da instância
                 tier = instance["settings"]["tier"]
 
-            
+                filter_key = "cloudsql.instances.create"
+
+                email = list_audit_logs(project_id, filter_key)
+                # ADD CREATOR
+                labels["exyon_create_by"] = email
                 # PATCH
                 try:
                     # Atualiza as labels da instância
