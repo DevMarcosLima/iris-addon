@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import List, Dict
 
 from googleapiclient import errors
+import datetime
 
 from plugin import Plugin
 from util.gcp_utils import (
@@ -74,7 +75,76 @@ class Subscriptions(Plugin):
         # Loading all Cloud Client libraries would be 100MB  means that
         # the default AppEngine Instance crashes on out-of-memory even before actually serving a request.
         from google.cloud import pubsub_v1
+        from google.cloud import logging
 
+        def correctLabel(label):
+            label = label.replace("-", "_")
+            label = label.replace(" ", "_")
+            label = label.replace(".", "_")
+            label = label.replace(":", "_")
+            label = label.replace(";", "_")
+            label = label.replace(",", "_")
+            label = label.replace("?", "_")
+            label = label.replace("!", "_")
+            label = label.replace("(", "_")
+            label = label.replace(")", "_")
+            label = label.replace("[", "_")
+            label = label.replace("]", "_")
+            label = label.replace("{", "_")
+            label = label.replace("}", "_")
+            label = label.replace("<", "_")
+            label = label.replace(">", "_")
+            label = label.replace("/", "_")
+            label = label.replace("\\", "_")
+            label = label.replace("|", "_")
+            label = label.replace("=", "_")
+            label = label.replace("+", "_")
+            label = label.replace("'", "_")
+            label = label.replace('"', "_")
+            label = label.replace("@", "-")
+            label = label.replace("#", "_")
+            label = label.replace("$", "_")
+            label = label.replace("%", "_")
+            label = label.replace("^", "_")
+            label = label.replace("&", "_")
+            label = label.replace("*", "_")
+            label = label.replace("~", "_")
+            label = label.replace("`", "_")
+
+            return label
+        
+        project_id = "poc-iris3-exyon"
+        filter_key = "google.pubsub.v1.Subscriber.CreateSubscription"
+        
+        client = logging.Client(project=project_id)
+
+        # Defina a data limite para 30 dias atrás a partir da data atual
+        data_limite = datetime.datetime.now() - datetime.timedelta(days=30)
+
+        # Formate a data limite no formato adequado
+        data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
+        filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"test-label-topic-marcos-sub"'
+        entries = client.list_entries(filter_=filtro)
+        # AND protoPayload.authorizationInfo.request.name:"topico-audit-log-test"
+        for entry in entries:
+            # Acesse as informações do registro de log no objeto entry
+            
+            payload_dict = dict(entry.payload)
+            
+            # Acesse as informações do registro de log no dicionário payload_dict
+            if 'authenticationInfo' in payload_dict:
+                principal_email = payload_dict['authenticationInfo'].get('principalEmail')
+                principal_email = correctLabel(principal_email)
+                labels["principal_email"] = principal_email        
+
+            if 'requestMetadata' in payload_dict:
+                date_create = payload_dict['requestMetadata'].get('requestAttributes').get('time')
+                date_create = date_create.split("T")[0]
+                labels["date_create"] = date_create
+        
+        
         add_loaded_lib("pubsub_v1")
         update_obj = pubsub_v1.types.Subscription(
             name=path, topic=parent_topic, labels=labels
