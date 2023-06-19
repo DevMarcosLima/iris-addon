@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Optional
 
 from googleapiclient import errors
-
+import datetime
 from plugin import Plugin
 from util.utils import log_time, timing
 # from plugins.decorator import list_audit_logs
@@ -136,13 +136,74 @@ class Cloudsql(Plugin):
                 print("location: ", location)
                 print("databasev: ", databasev)
 
+                def correctLabel(label):
+                    label = label.replace("-", "_")
+                    label = label.replace(" ", "_")
+                    label = label.replace(".", "_")
+                    label = label.replace(":", "_")
+                    label = label.replace(";", "_")
+                    label = label.replace(",", "_")
+                    label = label.replace("?", "_")
+                    label = label.replace("!", "_")
+                    label = label.replace("(", "_")
+                    label = label.replace(")", "_")
+                    label = label.replace("[", "_")
+                    label = label.replace("]", "_")
+                    label = label.replace("{", "_")
+                    label = label.replace("}", "_")
+                    label = label.replace("<", "_")
+                    label = label.replace(">", "_")
+                    label = label.replace("/", "_")
+                    label = label.replace("\\", "_")
+                    label = label.replace("|", "_")
+                    label = label.replace("=", "_")
+                    label = label.replace("+", "_")
+                    label = label.replace("'", "_")
+                    label = label.replace('"', "_")
+                    label = label.replace("@", "-")
+                    label = label.replace("#", "_")
+                    label = label.replace("$", "_")
+                    label = label.replace("%", "_")
+                    label = label.replace("^", "_")
+                    label = label.replace("&", "_")
+                    label = label.replace("*", "_")
+                    label = label.replace("~", "_")
+                    label = label.replace("`", "_")
+
+                    return label
+                project_id = "poc-iris3-exyon"
+                filter_key = "cloudsql.instances.create"
+                client = logging.Client(project=project_id)
+
+                # Defina a data limite para 30 dias atrás a partir da data atual
+                data_limite = datetime.datetime.now() - datetime.timedelta(days=30)
+
+                # Formate a data limite no formato adequado
+                data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
+                filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.authorizationInfo.resourceAttributes.name:"labpoclabel"'
+                entries = client.list_entries(filter_=filtro)
+
+                for entry in entries:
+                    # Acesse as informações do registro de log no objeto entry
+                    
+                    payload_dict = dict(entry.payload)
+                    
+                    # Acesse as informações do registro de log no dicionário payload_dict
+                    if 'authenticationInfo' in payload_dict:
+                        principal_email = payload_dict['authenticationInfo'].get('principalEmail')
+                        principal_email = correctLabel(principal_email)
+                    print(principal_email)
+
                 # Define as labels
                 labels = {
                     "cloud-sql": name,
                     "custo-cloud-sql": name,
                     "exyon_location": location,
                     "bd": databasev,
-                    "ano-mes": create
+                    "ano-mes": create,
+                    "exyon_created_by": principal_email
                 }
 
                 # Obtém a versão atual das configurações da instância
@@ -151,11 +212,6 @@ class Cloudsql(Plugin):
                 # Obtém o nível (tier) atual da instância
                 tier = instance["settings"]["tier"]
 
-                filter_key = "cloudsql.instances.create"
-
-                # email = list_audit_logs(project_id, filter_key)
-                # # ADD CREATOR
-                # labels["exyon_create_by"] = email
                 # PATCH
                 try:
                     # Atualiza as labels da instância
