@@ -4,7 +4,7 @@ from google.cloud import logging
 import json
 
 project_id = "poc-iris3-exyon"
-filter_key = "google.pubsub.v1.Subscriber.CreateSubscription"
+filter_key = "beta.compute.instances.insert"
 
 def correctLabel(label):
     label = label.replace("-", "_")
@@ -53,8 +53,8 @@ def list_audit_logs(project_id, filter_key):
     data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
-    filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"test-label-topic-marcos-sub"'
-    # AND protoPayload.request.name:"test-label-topic-marcos-sub"
+    filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"instance-2"'
+    # AND protoPayload.request.name:"instance-2"
     entries = client.list_entries(filter_=filtro)
     # AND protoPayload.authorizationInfo.request.name:"topico-audit-log-test"
     for entry in entries:
@@ -67,9 +67,9 @@ def list_audit_logs(project_id, filter_key):
             principal_email = payload_dict['authenticationInfo'].get('principalEmail')
             principal_email = correctLabel(principal_email)
 
-        if 'requestMetadata' in payload_dict:
-            date_create = payload_dict['requestMetadata'].get('requestAttributes').get('time')
-            date_create = date_create.split("T")[0]
+        print("principal_email: ", principal_email)
+        # JSON AMB
+        print(json.dumps(payload_dict, indent=4, sort_keys=True))
 
        
 

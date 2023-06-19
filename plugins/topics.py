@@ -68,7 +68,8 @@ class Topics(Plugin):
             return
         
         labels = labels_outer["labels"]
-
+        # get exyon name by label
+        name_topic_filt = labels.get("exyon_name")
         from google.cloud import logging
 
         def correctLabel(label):
@@ -119,7 +120,7 @@ class Topics(Plugin):
         data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
-        filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"test-label-topic-marcos"'
+        filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"{name_topic_filt}"'
         entries = client.list_entries(filter_=filtro)
         # AND protoPayload.authorizationInfo.request.name:"topico-audit-log-test"
         for entry in entries:
@@ -131,17 +132,17 @@ class Topics(Plugin):
             if 'authenticationInfo' in payload_dict:
                 principal_email = payload_dict['authenticationInfo'].get('principalEmail')
                 principal_email = correctLabel(principal_email)
+                labels["exyon_create_by"] = principal_email
 
             if 'requestMetadata' in payload_dict:
                 date_create = payload_dict['requestMetadata'].get('requestAttributes').get('time')
                 date_create = date_create.split("T")[0]
+                labels["ano-mes"] = date_create
 
             print(date_create)
             print(principal_email)
             # JSON object
         
-        labels["exyon_create_by"] = principal_email
-        labels["ano-mes"] = date_create
 
         name = self._gcp_name(gcp_object)
         path = self._cloudclient().topic_path(project_id, name)

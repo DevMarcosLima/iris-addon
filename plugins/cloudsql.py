@@ -186,7 +186,7 @@ class Cloudsql(Plugin):
                 data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
 
                 # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
-                filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.authorizationInfo.resourceAttributes.name:"labpoclabel"'
+                filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.authorizationInfo.resourceAttributes.name:"{name}"'
                 entries = client.list_entries(filter_=filtro)
 
                 for entry in entries:
@@ -198,6 +198,8 @@ class Cloudsql(Plugin):
                     if 'authenticationInfo' in payload_dict:
                         principal_email = payload_dict['authenticationInfo'].get('principalEmail')
                         principal_email = correctLabel(principal_email)
+                    else:
+                        principal_email = "null"
                     print(principal_email)
 
                 # Define as labels

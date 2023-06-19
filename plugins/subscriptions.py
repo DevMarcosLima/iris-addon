@@ -125,7 +125,7 @@ class Subscriptions(Plugin):
         data_limite_formatada = data_limite.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # Use o filtro para buscar os logs de auditoria "cloudsql.instances.create" para o recurso "labpoclabel" criados nos últimos 30 dias
-        filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"test-label-topic-marcos-sub"'
+        filtro = f'protoPayload.methodName="{filter_key}" AND timestamp>="{data_limite_formatada}" AND protoPayload.request.name:"{parent_topic}"'
         entries = client.list_entries(filter_=filtro)
         # AND protoPayload.authorizationInfo.request.name:"topico-audit-log-test"
         for entry in entries:
