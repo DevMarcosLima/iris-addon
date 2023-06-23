@@ -108,7 +108,6 @@ class Topics(Plugin):
 
             return label
         
-        project_id = "poc-iris3-exyon"
         filter_key = "google.pubsub.v1.Publisher.CreateTopic"
         
         client = logging.Client(project=project_id)

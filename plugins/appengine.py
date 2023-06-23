@@ -71,7 +71,7 @@ class Appengine(Plugin):
         page_token = None
         try:
             while True:
-                response = self._google_api_client().apps().services().list(appsId="poc-iris3-exyon", pageToken=None).execute()
+                response = self._google_api_client().apps().services().list(appsId=project_id, pageToken=None).execute()
                 if "services" not in response:
                     return
                 for service in response["services"]:

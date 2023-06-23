@@ -113,7 +113,6 @@ class Subscriptions(Plugin):
 
             return label
         
-        project_id = "poc-iris3-exyon"
         filter_key = "google.pubsub.v1.Subscriber.CreateSubscription"
         
         client = logging.Client(project=project_id)

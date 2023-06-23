@@ -174,7 +174,6 @@ class Cloudsql(Plugin):
 
                     return label
                
-                project_id = "poc-iris3-exyon"
                 filter_key = "cloudsql.instances.create"
                 
                 client = logging.Client(project=project_id)

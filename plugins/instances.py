@@ -161,7 +161,6 @@ class Instances(GceZonalBase):
 
                 return label
             
-            project_id = "poc-iris3-exyon"
             filter_key = "beta.compute.instances.insert"
             
             client = logging.Client(project=project_id)
