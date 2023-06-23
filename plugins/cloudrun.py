@@ -59,7 +59,7 @@ class Cloudrun(Plugin):
                 return None
             labels_ = log_data["resource"]["labels"]
             service = labels_["service_name"]
-            service = self._get_resource("poc-iris3-exyon", service)
+            service = self._get_resource(log_data["resource"]["projectId"], service)
             return service
         except Exception:
             return None

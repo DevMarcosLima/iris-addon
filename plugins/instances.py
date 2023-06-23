@@ -96,16 +96,16 @@ class Instances(GceZonalBase):
             from google.cloud import compute_v1
             client = compute_v1.InstancesClient()
             disks_client = compute_v1.DisksClient()
-
+            zoneSearch = labels["labels"]["exyon_zone"]
             # Use a paginação para recuperar todas as VMs
-            request = compute_v1.ListInstancesRequest(project=project_id, zone="us-central1-c")
+            request = compute_v1.ListInstancesRequest(project=project_id, zone=zoneSearch)
             response = client.list(request)
 
             # Itere sobre as VMs retornadas
             for vm in response.items:
                 # GET INFO ABOUT VM
                 request = compute_v1.GetInstanceRequest(
-                    project=project_id, zone="us-central1-c", instance=vm.name
+                    project=project_id, zone=zoneSearch, instance=vm.name
                 )
                 response = client.get(request)
 
