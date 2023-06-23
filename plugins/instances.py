@@ -111,7 +111,7 @@ class Instances(GceZonalBase):
 
                 # Listar os dados dos discos da VM
                 for disk in response.disks:
-                    disk_request = compute_v1.GetDiskRequest(project=project_id, zone="us-central1-c", disk=disk.device_name)
+                    disk_request = compute_v1.GetDiskRequest(project=project_id, zone=zoneSearch, disk=disk.device_name)
                     disk_response = disks_client.get(disk_request)
                     image = disk_response.source_image.split('/')[-1]
                     print(f"Image: {image}")
