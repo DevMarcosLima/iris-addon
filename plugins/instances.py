@@ -97,6 +97,7 @@ class Instances(GceZonalBase):
             client = compute_v1.InstancesClient()
             disks_client = compute_v1.DisksClient()
             zoneSearch = labels["labels"]["exyon_zone"]
+            logging.warning(f"zoneSearch: {zoneSearch}")
             # Use a paginação para recuperar todas as VMs
             request = compute_v1.ListInstancesRequest(project=project_id, zone=zoneSearch)
             response = client.list(request)
