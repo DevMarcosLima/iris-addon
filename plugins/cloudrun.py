@@ -105,6 +105,42 @@ class Cloudrun(Plugin):
             is_create = is_create.split("-")[0] + "-" + is_create.split("-")[1]
             is_location = service_name.split("/")[3]
             creator = gcp_object["creator"]	
+            def correctLabel(label):
+                label = label.replace("-", "_")
+                label = label.replace(" ", "_")
+                label = label.replace(".", "_")
+                label = label.replace(":", "_")
+                label = label.replace(";", "_")
+                label = label.replace(",", "_")
+                label = label.replace("?", "_")
+                label = label.replace("!", "_")
+                label = label.replace("(", "_")
+                label = label.replace(")", "_")
+                label = label.replace("[", "_")
+                label = label.replace("]", "_")
+                label = label.replace("{", "_")
+                label = label.replace("}", "_")
+                label = label.replace("<", "_")
+                label = label.replace(">", "_")
+                label = label.replace("/", "_")
+                label = label.replace("\\", "_")
+                label = label.replace("|", "_")
+                label = label.replace("=", "_")
+                label = label.replace("+", "_")
+                label = label.replace("'", "_")
+                label = label.replace('"', "_")
+                label = label.replace("@", "-")
+                label = label.replace("#", "_")
+                label = label.replace("$", "_")
+                label = label.replace("%", "_")
+                label = label.replace("^", "_")
+                label = label.replace("&", "_")
+                label = label.replace("*", "_")
+                label = label.replace("~", "_")
+                label = label.replace("`", "_")
+
+                return label
+            
             creator = correctLabel(creator)
 
             # ADICIONAR CRIADOR ENTRE OUTROS LABELS
@@ -130,39 +166,3 @@ class Cloudrun(Plugin):
                 logging.exception("Cloud Run service is not fully deployed yet, which is why we do not label it on-demand in the usual way")
             raise e
 
-
-def correctLabel(label):
-    label = label.replace("-", "_")
-    label = label.replace(" ", "_")
-    label = label.replace(".", "_")
-    label = label.replace(":", "_")
-    label = label.replace(";", "_")
-    label = label.replace(",", "_")
-    label = label.replace("?", "_")
-    label = label.replace("!", "_")
-    label = label.replace("(", "_")
-    label = label.replace(")", "_")
-    label = label.replace("[", "_")
-    label = label.replace("]", "_")
-    label = label.replace("{", "_")
-    label = label.replace("}", "_")
-    label = label.replace("<", "_")
-    label = label.replace(">", "_")
-    label = label.replace("/", "_")
-    label = label.replace("\\", "_")
-    label = label.replace("|", "_")
-    label = label.replace("=", "_")
-    label = label.replace("+", "_")
-    label = label.replace("'", "_")
-    label = label.replace('"', "_")
-    label = label.replace("@", "-")
-    label = label.replace("#", "_")
-    label = label.replace("$", "_")
-    label = label.replace("%", "_")
-    label = label.replace("^", "_")
-    label = label.replace("&", "_")
-    label = label.replace("*", "_")
-    label = label.replace("~", "_")
-    label = label.replace("`", "_")
-
-    return label
