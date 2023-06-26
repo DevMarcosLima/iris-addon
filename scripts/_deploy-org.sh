@@ -21,11 +21,11 @@ ORGID=$(curl -X POST -H "Authorization: Bearer \"$(gcloud auth print-access-toke
   tail -n 1 | tr -d ' ' | cut -d'"' -f4)
 
 # Create custom role to run iris
-if gcloud iam roles describe "$ROLEID" --organization "$ORGID"; then
-  gcloud iam roles update -q "$ROLEID" --organization "$ORGID" --file roles.yaml
-else
-  gcloud iam roles create "$ROLEID" -q --organization "$ORGID" --file roles.yaml
-fi
+# if gcloud iam roles describe "$ROLEID" --organization "$ORGID"; then
+#   gcloud iam roles update -q "$ROLEID" --organization "$ORGID" --file roles.yaml
+# else
+#   gcloud iam roles create "$ROLEID" -q --organization "$ORGID" --file roles.yaml
+# fi
 
 # Assign default iris app engine service account with role on organization level
 gcloud organizations add-iam-policy-binding "$ORGID" \
