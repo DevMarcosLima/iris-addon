@@ -117,7 +117,7 @@ class Instances(GceZonalBase):
                     disk_response = disks_client.get(disk_request)
                     image = disk_response.source_image.split('/')[-1]
                     print(f"Image: {image}")
-                    labels["labels"]["so"] = correctLabel(image)
+                    labels["labels"]["so"] = image
 
             
             # DELETE ["labels"]["exyon_name"] AND ADD ["labels"]["vm"]
