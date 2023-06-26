@@ -88,85 +88,86 @@ class Cloudrun(Plugin):
     @log_time
     def label_resource(self, gcp_object, project_id):
         labels = gcp_object.get("labels", {})
-        if labels is None:
-            return
-        try:
-            service_name = gcp_object["name"]
+        # if labels is None:
+        #     return
+        print(f"MX12 labels: {labels}")
+        # try:
+        service_name = gcp_object["name"]
 
-            # json body
-            service_body = gcp_object
-            # ADD LABELS in json body
-            # GET createTime
-            service_name = gcp_object["name"]
-            is_name = service_name.split("/")[-1]
-            is_create = gcp_object["createTime"]
-            is_create = is_create.split("T")[0]
-            # aaaa-mm
-            is_create = is_create.split("-")[0] + "-" + is_create.split("-")[1]
-            is_location = service_name.split("/")[3]
-            creator = gcp_object["creator"]	
-            def correctLabel(label):
-                label = label.replace("-", "_")
-                label = label.replace(" ", "_")
-                label = label.replace(".", "_")
-                label = label.replace(":", "_")
-                label = label.replace(";", "_")
-                label = label.replace(",", "_")
-                label = label.replace("?", "_")
-                label = label.replace("!", "_")
-                label = label.replace("(", "_")
-                label = label.replace(")", "_")
-                label = label.replace("[", "_")
-                label = label.replace("]", "_")
-                label = label.replace("{", "_")
-                label = label.replace("}", "_")
-                label = label.replace("<", "_")
-                label = label.replace(">", "_")
-                label = label.replace("/", "_")
-                label = label.replace("\\", "_")
-                label = label.replace("|", "_")
-                label = label.replace("=", "_")
-                label = label.replace("+", "_")
-                label = label.replace("'", "_")
-                label = label.replace('"', "_")
-                label = label.replace("@", "-")
-                label = label.replace("#", "_")
-                label = label.replace("$", "_")
-                label = label.replace("%", "_")
-                label = label.replace("^", "_")
-                label = label.replace("&", "_")
-                label = label.replace("*", "_")
-                label = label.replace("~", "_")
-                label = label.replace("`", "_")
+        # json body
+        service_body = gcp_object
+        # ADD LABELS in json body
+        # GET createTime
+        service_name = gcp_object["name"]
+        is_name = service_name.split("/")[-1]
+        is_create = gcp_object["createTime"]
+        is_create = is_create.split("T")[0]
+        # aaaa-mm
+        is_create = is_create.split("-")[0] + "-" + is_create.split("-")[1]
+        is_location = service_name.split("/")[3]
+        creator = gcp_object["creator"]	
+        def correctLabel(label):
+            label = label.replace("-", "_")
+            label = label.replace(" ", "_")
+            label = label.replace(".", "_")
+            label = label.replace(":", "_")
+            label = label.replace(";", "_")
+            label = label.replace(",", "_")
+            label = label.replace("?", "_")
+            label = label.replace("!", "_")
+            label = label.replace("(", "_")
+            label = label.replace(")", "_")
+            label = label.replace("[", "_")
+            label = label.replace("]", "_")
+            label = label.replace("{", "_")
+            label = label.replace("}", "_")
+            label = label.replace("<", "_")
+            label = label.replace(">", "_")
+            label = label.replace("/", "_")
+            label = label.replace("\\", "_")
+            label = label.replace("|", "_")
+            label = label.replace("=", "_")
+            label = label.replace("+", "_")
+            label = label.replace("'", "_")
+            label = label.replace('"', "_")
+            label = label.replace("@", "-")
+            label = label.replace("#", "_")
+            label = label.replace("$", "_")
+            label = label.replace("%", "_")
+            label = label.replace("^", "_")
+            label = label.replace("&", "_")
+            label = label.replace("*", "_")
+            label = label.replace("~", "_")
+            label = label.replace("`", "_")
 
-                return label
-            
-            
+            return label
+        
+        
 
-            creator = correctLabel(creator)
-            print(f"MX11 creator: {creator}")
-            # ADICIONAR CRIADOR ENTRE OUTROS LABELS
-            
+        creator = correctLabel(creator)
+        print(f"MX11 creator: {creator}")
+        # ADICIONAR CRIADOR ENTRE OUTROS LABELS
+        
 
-            # IF DONT HAVE LABELS
-            if not service_body.get("labels"):
-                service_body["labels"] = {}
-            prefix = "exyon_"
-            # ADD LABELS
-            service_body["labels"][f'cloud-run'] = is_name
-            service_body["labels"][f'ano-mes'] = is_create
-            service_body["labels"][f'{prefix}location'] = is_location
-            service_body["labels"][f'{prefix}create_by'] = creator
-            
-            print(f"MX11 service_body: {service_body}")
-            
-            self._google_api_client().projects().locations().services().patch(
-                name=f"projects/{project_id}/locations/{is_location}/services/{is_name}",
-                body=service_body,
-            ).execute()
+        # IF DONT HAVE LABELS
+        if not service_body.get("labels"):
+            service_body["labels"] = {}
+        prefix = "exyon_"
+        # ADD LABELS
+        service_body["labels"][f'cloud-run'] = is_name
+        service_body["labels"][f'ano-mes'] = is_create
+        service_body["labels"][f'{prefix}location'] = is_location
+        service_body["labels"][f'{prefix}create_by'] = creator
+        
+        print(f"MX11 service_body: {service_body}")
 
-        except errors.HttpError as e:
-            if "SERVICE_STATUS_UNSPECIFIED" in gcp_object.get("status", {}):
-                logging.exception("Cloud Run service is not fully deployed yet, which is why we do not label it on-demand in the usual way")
-            raise e
+        self._google_api_client().projects().locations().services().patch(
+            name=f"projects/{project_id}/locations/{is_location}/services/{is_name}",
+            body=service_body,
+        ).execute()
+
+        # except errors.HttpError as e:
+        #     if "SERVICE_STATUS_UNSPECIFIED" in gcp_object.get("status", {}):
+        #         logging.exception("Cloud Run service is not fully deployed yet, which is why we do not label it on-demand in the usual way")
+        #     raise e
 
