@@ -267,6 +267,8 @@ class Bigquery(Plugin):
                     if 'labels' not in dataset_metadata:
                         dataset_metadata['labels'] = {}
 
+                    print(f"MX11 BQ {dataset_metadata['labels']}")
+
                     dataset_metadata['labels']['exyon_create_by'] = creater
                     dataset_metadata['labels']['ano-mes'] = create_time
 

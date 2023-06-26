@@ -141,8 +141,10 @@ class Cloudrun(Plugin):
 
                 return label
             
-            creator = correctLabel(creator)
+            
 
+            creator = correctLabel(creator)
+            print(f"MX11 creator: {creator}")
             # ADICIONAR CRIADOR ENTRE OUTROS LABELS
             
 
@@ -155,6 +157,8 @@ class Cloudrun(Plugin):
             service_body["labels"][f'ano-mes'] = is_create
             service_body["labels"][f'{prefix}location'] = is_location
             service_body["labels"][f'{prefix}create_by'] = creator
+            
+            print(f"MX11 service_body: {service_body}")
             
             self._google_api_client().projects().locations().services().patch(
                 name=f"projects/{project_id}/locations/{is_location}/services/{is_name}",
