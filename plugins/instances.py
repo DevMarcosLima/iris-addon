@@ -194,7 +194,7 @@ class Instances(GceZonalBase):
             labels["labels"]["vm"] = nameVM
             labels["labels"]["custo-vm"] = nameVM
 
-
+            print(f"MX11 - labels: {labels}")
             self._batch.add(
                 self._google_api_client()
                 .instances()
