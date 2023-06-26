@@ -70,7 +70,9 @@ class Cloudrun(Plugin):
         page_token = None
         try:
             while True:
-                response = self._google_api_client().projects().locations().services().list(parent=f"projects/{project_id}/locations/us-central1", pageToken=None).execute()
+
+                response = self._google_api_client().projects().locations().services().list(parent=f"projects/{project_id}/locations/southamerica-east1", pageToken=None).execute()
+
                 if "services" not in response:
                     return
                 for service in response["services"]:
