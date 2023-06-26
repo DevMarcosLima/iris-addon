@@ -77,6 +77,7 @@ class Instances(GceZonalBase):
 
     @log_time
     def label_resource(self, gcp_object, project_id):
+        print("MX11 - label_resource")
         with self._write_lock:
             labels = self._build_labels(gcp_object, project_id)
             if labels is None:
@@ -97,7 +98,7 @@ class Instances(GceZonalBase):
             client = compute_v1.InstancesClient()
             disks_client = compute_v1.DisksClient()
             zoneSearch = zone
-            logging.warning(f"zoneSearch: {zoneSearch}")
+            print(f"MX11 Zone: {zoneSearch}")
             # Use a paginação para recuperar todas as VMs
             request = compute_v1.ListInstancesRequest(project=project_id, zone=zoneSearch)
             response = client.list(request)
