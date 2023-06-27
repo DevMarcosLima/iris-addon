@@ -5,7 +5,7 @@
 
 # projects: Only resources in these projects will get labeled.
 # But if the value is empty, *all* projects in the organization are included.
-projects: [iris3-labels-prd]
+projects: []
 
 # plugins: Only these plugins are enabled.
 # For example, add some of these to the list:
@@ -40,7 +40,7 @@ specific_prefixes: {}
 
 # If from_project is True, then for each resource we are labeling, copy the labels from its project onto it.
 # The default is False.
-from_project: True
+from_project: False
 
 # If label_all_on_cron is False (the default), then to save money,
 #  only resources of certain types get labeled on cron: those whose plugins either

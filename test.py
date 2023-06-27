@@ -1,19 +1,15 @@
-import datetime
-from google.cloud import billing
+# DISCOVERY GCP API CLOUDRUN V2
 
-client = billing.CloudBillingClient()
+import os
+import json
+import googleapiclient.discovery
 
-project_id = "poc-iris3-exyon"
+client = googleapiclient.discovery.build('run', 'v2')
 
-
-def list_acc(project_id):
-    accounts = client.list_billing_accounts()
-    for account in accounts:
-        # Acesse as informações da conta de faturamento no objeto account
-        print(account)
-
-
-list_acc(project_id)
+def list_services(project_id, location):
+    response = client.projects().locations().services().list(parent=f"projects/{project_id}/locations/us-central1", pageToken=None).execute()
+    print(response)
+list_services("poc-iris3-exyon", "us-central1")
 
 
 # import datetime
